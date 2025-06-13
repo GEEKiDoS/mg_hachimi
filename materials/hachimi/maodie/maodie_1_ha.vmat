@@ -1,0 +1,65 @@
+// THIS FILE IS AUTO-GENERATED
+
+Layer0
+{
+	shader "csgo_complex.vfx"
+
+	//---- 2-Sided Rendering ----
+	F_RENDER_BACKFACES 1
+
+	//---- PBR ----
+	F_SELF_ILLUM 1
+
+	//---- Translucent ----
+	F_ALPHA_TEST 1
+
+	//---- Ambient Occlusion ----
+	TextureAmbientOcclusion "materials/default/default_ao.tga"
+
+	//---- Color ----
+	g_flModelTintAmount "1.000"
+	g_flTexCoordRotation "0.000"
+	g_nScaleTexCoordUByModelScaleAxis "0" // None
+	g_nScaleTexCoordVByModelScaleAxis "0" // None
+	g_vColorTint "[1.000000 1.000000 1.000000 0.000000]"
+	g_vTexCoordCenter "[0.500 0.500]"
+	g_vTexCoordOffset "[0.000 0.000]"
+	g_vTexCoordScale "[1.000 1.000]"
+	g_vTexCoordScrollSpeed "[0.000 0.000]"
+	TextureColor "materials/hachimi/maodie/maodie_1_ha.tga"
+
+	//---- Fog ----
+	g_bFogEnabled "1"
+
+	//---- Lighting ----
+	g_flMetalness "0.000"
+	TextureRoughness "materials/default/default_rough.tga"
+
+	//---- Normal Map ----
+	TextureNormal "materials/default/default_normal.tga"
+
+	//---- Self Illum ----
+	g_flSelfIllumAlbedoFactor "1.000"
+	g_flSelfIllumBrightness "0.000"
+	g_flSelfIllumScale "1.000"
+	g_vSelfIllumScrollSpeed "[0.000 0.000]"
+	g_vSelfIllumTint "[1.000000 1.000000 1.000000 0.000000]"
+	TextureSelfIllumMask "[1.000000 1.000000 1.000000 0.000000]"
+
+	//---- Texture Address Mode ----
+	g_nTextureAddressModeU "0" // Wrap
+	g_nTextureAddressModeV "0" // Wrap
+
+	//---- Translucent ----
+	g_flAlphaTestReference "0.500"
+	g_flAntiAliasedEdgeStrength "1.000"
+	TextureTranslucency "materials/hachimi/maodie/maodie_1_mask.tga"
+
+	UnusedVariables
+	{
+		"g_flAlphaTestReference1" "0.5"
+		"g_flAntiAliasedEdgeStrength1" "1"
+		"TextureTranslucency1" ""
+		"g_flOpacityScale" "1"
+	}
+}

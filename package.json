@@ -1,0 +1,10 @@
+{
+    "name": "mg_hachimi",
+    "version": "1.0.0",
+    "scripts": {
+        "start": "s2ts start"
+    },
+    "dependencies": {
+        "s2ts": "0.5.2"
+    }
+}

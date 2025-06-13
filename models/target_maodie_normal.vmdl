@@ -1,0 +1,119 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:modeldoc39:version{1ceecb0d-4093-4729-ab18-b76886c64cde} -->
+{
+	rootNode = 
+	{
+		_class = "RootNode"
+		children = 
+		[
+			{
+				_class = "RenderMeshList"
+				children = 
+				[
+					{
+						_class = "RenderMeshFile"
+						name = "nml"
+						filename = "models\\fbx\\mesh\\target_maodie_normal.fbx"
+						import_scale = 1.0
+						import_filter = 
+						{
+							exclude_by_default = false
+							exception_list = [  ]
+						}
+					},
+					{
+						_class = "RenderMeshFile"
+						name = "ha"
+						children = 
+						[
+							{
+								_class = "ReplaceMeshMaterials"
+								remaps = 
+								[
+									{
+										from = "materials/hachimi/maodie/maodie_1_nml.vmat"
+										to = "materials/hachimi/maodie/maodie_1_ha.vmat"
+									},
+								]
+								use_single_material = false
+								single_override_material = ""
+							},
+						]
+						filename = "models/fbx/mesh/target_maodie_normal.fbx"
+						import_scale = 1.0
+						import_filter = 
+						{
+							exclude_by_default = false
+							exception_list = [  ]
+						}
+					},
+					{
+						_class = "RenderMeshFile"
+						name = "o"
+						children = 
+						[
+							{
+								_class = "ReplaceMeshMaterials"
+								remaps = 
+								[
+									{
+										from = "materials/hachimi/maodie/maodie_1_nml.vmat"
+										to = "materials/hachimi/maodie/maodie_1_o.vmat"
+									},
+								]
+								use_single_material = false
+								single_override_material = ""
+							},
+						]
+						filename = "models/fbx/mesh/target_maodie_normal.fbx"
+						import_scale = 1.0
+						import_filter = 
+						{
+							exclude_by_default = false
+							exception_list = [  ]
+						}
+					},
+				]
+			},
+			{
+				_class = "BodyGroupList"
+				children = 
+				[
+					{
+						_class = "BodyGroup"
+						name = "body"
+						children = 
+						[
+							{
+								_class = "BodyGroupChoice"
+								meshes = 
+								[
+									"nml",
+								]
+							},
+							{
+								_class = "BodyGroupChoice"
+								meshes = 
+								[
+									"ha",
+								]
+							},
+							{
+								_class = "BodyGroupChoice"
+								meshes = 
+								[
+									"o",
+								]
+							},
+						]
+						hidden_in_tools = false
+						non_bodygroup_single_choice = false
+					},
+				]
+			},
+		]
+		model_archetype = ""
+		primary_associated_entity = ""
+		anim_graph_name = ""
+		document_sub_type = "ModelDocSubType_None"
+	}
+}
