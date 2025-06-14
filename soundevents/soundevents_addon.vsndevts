@@ -4,6 +4,7 @@
 	{
 		type = "csgo_music"
 		use_hrtf = 0.0
+		volume = 0.8
 		vsnd_files = "sounds/manbo_namie_sometimes_hachimi.vsnd"
 	}
 
@@ -12,5 +13,68 @@
 		type = "csgo_music"
 		use_hrtf = 0.0
 		vsnd_files = "sounds/ha.vsnd"
+	}
+
+	"effect.manbo" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/manbo.vsnd"
+	}
+
+	"effect.aminos" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/aminos.vsnd"
+	}
+
+	"effect.hachimi" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/hachimi.vsnd"
+	}
+
+	"effect.hachimi_long" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/hachimi_long.vsnd"
+	}
+
+	"effect.omachili_manbo" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/omachili_manbo.vsnd"
+	}
+
+	"effect.oye" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/oye.vsnd"
+	}
+
+	"effect.siren_laugh" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/siren_laugh.vsnd"
+	}
+
+	"effect.wow" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/wow.vsnd"
+	}
+
+	"effect.hitmarker" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/hitmarker_2.vsnd"
 	}
 }

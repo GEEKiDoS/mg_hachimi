@@ -1,13 +1,87 @@
 /// <reference types="s2ts/types/cspointscript" />
 import { Instance } from "cspointscript"
-import { runServerCommand, game, addOutputByName, createEntity, uniqueId } from "s2ts/counter-strike"
+import { runServerCommand, game, addOutputByName, createEntity, uniqueId, Vector } from "s2ts/counter-strike"
 import { chart } from './chart';
 
-Instance.Msg("Hello World!")
+const START_POINT = [1920, 736];
+const END_POINT = [576, 320];
+const DELTA = START_POINT.map((v, i) => v - END_POINT[i]);
+const TRACK_LENGTH = Math.sqrt(DELTA[0] * DELTA[0] + DELTA[1] * DELTA[1]);
+const JUDGE_LINE = 64;
+
+const POOR_RANGE = 0.2;
+const BAD_RANGE = 0.15;
+const GOOD_RANGE = 0.1;
+const GREAT_RANGE = 0.05;
+const PGREAT_RANGE = 0.02;
+
+const JUDGE_TO_TEXT = ['PERFECT', 'GREAT', 'GOOD', 'BAD', 'POOR', 'UNKNOWN'];
+const LOC_TO_TEXT = ['HEAD', 'BODY'];
+
+let waitTime = 0.25;
+let trackTime = 1.25;
+const getSpeed = () => (TRACK_LENGTH - 128) / trackTime;
+
+interface SoundEffect {
+    play: () => void;
+    kill: () => void;
+}
+
+function createSoundEvent(soundName: string, startOnSpawn: boolean = false): SoundEffect {
+    const soundTargetName = 'maodie_effect_' + uniqueId();
+    createEntity({
+        class: 'point_soundevent',
+        keyValues: {
+            targetName: soundTargetName,
+            soundName,
+            startOnSpawn,
+        },
+    });
+
+    return {
+        play: () => {
+            Instance.EntFireAtName(soundTargetName, 'StartSound');
+        },
+        kill: () => {
+            Instance.EntFireAtName(soundTargetName, 'Kill');
+        }
+    };
+}
+
+class JudgeTipController {
+    lastSetTime = 0;
+
+    constructor(
+        private targetname: string,
+    ) {
+        game.onTick(() => {
+            this.onTick();
+        });
+
+        Instance.EntFireAtName(this.targetname, "SetScale", 0);
+    }
+
+    onTick() {
+        const now = Instance.GetGameTime();
+        if (now - this.lastSetTime > 1) {
+            if (now - this.lastSetTime < 1.2) {
+                const scale = 1.0 - ((now - this.lastSetTime - 1) / 0.2);
+                Instance.EntFireAtName(this.targetname, "SetScale", scale);
+            } else if (now - this.lastSetTime < 1.3) {
+                Instance.EntFireAtName(this.targetname, "SetScale", 0);
+            }
+        }
+    }
+
+    setText(text: string) {
+        this.lastSetTime = Instance.GetGameTime();
+        Instance.EntFireAtName(this.targetname, 'SetMessage', text);
+        Instance.EntFireAtName(this.targetname, 'SetScale', 1);
+    }
+}
 
 class HachimiGame {
     static instance: HachimiGame | undefined = undefined;
-    static templateSuffixBegin = 0;
     static init() {
         this.instance = new HachimiGame();
     }
@@ -16,19 +90,40 @@ class HachimiGame {
     templateSuffix = 1;
     lastTrySuffix = 1;
     liveTargets: Record<string, {
-        position: number
+        index: number
     }> = {};
 
     lastTime = 0;
 
-    startPlayTime = 0;
+    musicStartTime = 0;
     lastNoteIndex = 0;
     musicStarted = false;
-    musicStopped = false;
+    musicStopped = true;
+
+    gameplayStatus = {
+        perfect: 0,
+        great: 0,
+        good: 0,
+        bad: 0,
+        poor: 0,
+        headshot: 0,
+        bodyshot: 0,
+        combo: 0,
+        maxcombo: 0,
+        offset: 0,
+    };
+
+    judgeTipControllers: JudgeTipController[] = [];
+
+    hitmarkerEffect: SoundEffect;
+    combobreakEffect: SoundEffect;
+    comboEffects: SoundEffect[];
 
     constructor() {
-        Instance.EntFireAtName('maodie_spawnpoint_suffix_finder', "ForceSpawn");
-        this.findSuffix();
+        game.runNextTick(() => {
+            Instance.EntFireAtName('maodie_spawnpoint_suffix_finder', "ForceSpawn");
+            this.findSuffix();
+        });
     }
 
     findSuffix() {
@@ -36,13 +131,13 @@ class HachimiGame {
             return;
         }
 
-        game.runAfterDelayTicks(() => {
-            const SCAN_PER_TICKET = 50;
+        game.runNextTick(() => {
+            const SCAN_PER_TICK = 50;
 
             const suffix = this.lastTrySuffix;
-            this.lastTrySuffix += SCAN_PER_TICKET;
+            this.lastTrySuffix += SCAN_PER_TICK;
 
-            for (let i = 0; i < SCAN_PER_TICKET; i++) {
+            for (let i = 0; i < SCAN_PER_TICK; i++) {
                 addOutputByName('maodie_relay_' + (suffix + i), {
                     outputName: 'OnUser3',
                     targetName: 's2ts-script',
@@ -51,16 +146,16 @@ class HachimiGame {
                 });
             }
 
-            game.runAfterDelayTicks(() => {
-                for (let i = 0; i < SCAN_PER_TICKET; i++) {
+            game.runNextTick(() => {
+                for (let i = 0; i < SCAN_PER_TICK; i++) {
                     Instance.EntFireAtName('maodie_relay_' + (suffix + i), 'FireUser3');
                 }
-            }, 1);
 
-            game.runAfterDelayTicks(() => {
-                this.findSuffix();
-            }, 2);
-        }, 1);
+                game.runNextTick(() => {
+                    this.findSuffix();
+                });
+            });
+        });
     }
 
     postInit() {
@@ -68,28 +163,33 @@ class HachimiGame {
 
         this.lastTime = Instance.GetGameTime();
         Instance.Msg("PostInit: template suffix: " + this.templateSuffix);
+        runServerCommand("say Ready");
 
         Instance.EntFireAtName('maodie_relay_' + (this.templateSuffix - 1), "FireUser2");
 
-        game.runAfterDelaySeconds(() => {
-            this.startPlayTime = Instance.GetGameTime() + 5.0;
+        game.onTick(() => {
+            this.onTick();
+        });
 
-            createEntity({
-                class: 'point_soundevent',
-                keyValues: {
-                    targetName: 'maodie_sound_player',
-                    soundName: 'music.manbo_namie_sometimes_hachimi',
-                },
-            });
+        game.runNextTick(() => {
+            Instance.EntFireAtName('maodie_start_text', 'SetMessage', "PRESS TO START");
 
-            game.onTick(() => {
-                this.onTick();
-            });
-        }, 1);
+            for (let i = 0; i < 7; i++) {
+                this.judgeTipControllers.push(new JudgeTipController('maodie_judge_tip_' + i));
+            }
+        });
+
+        this.hitmarkerEffect = createSoundEvent('effect.hitmarker');
+        this.combobreakEffect = createSoundEvent('effect.siren_laugh');
+        this.comboEffects = ['effect.wow', 'effect.manbo', 'effect.oye'].map(v => createSoundEvent(v));
     }
 
-    spawnMaodie(spawnPoint: number) {
-        if (spawnPoint < 1 || spawnPoint > 7) {
+    get time() {
+        return Instance.GetGameTime() - this.musicStartTime;
+    }
+
+    spawnMaodie(spawnPoint: number, noteTime: number, noteIndex: number) {
+        if (spawnPoint < 0 || spawnPoint > 6) {
             Instance.Msg("invalid spawn point " + spawnPoint);
 
             return;
@@ -123,85 +223,236 @@ class HachimiGame {
         }, 1);
 
         this.liveTargets[suffix] = {
-            position: spawnPoint,
+            index: noteIndex,
         };
 
-        const soundTargetName = 'maodie_effect_' + uniqueId();
-        createEntity({
-            class: 'point_soundevent',
-            keyValues: {
-                targetName: soundTargetName,
-                soundName: 'effect.maodie_ha',
-            },
-        });
+        const judgeDelay = noteTime - this.time;
+        Instance.Msg(judgeDelay);
 
         game.runAfterDelaySeconds(() => {
-            Instance.EntFireAtName(soundTargetName, 'StartSound');
-            Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,1');
+            Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser1');
+        }, judgeDelay - trackTime - waitTime);
 
-            game.runAfterDelaySeconds(() => {
-                Instance.EntFireAtName(soundTargetName, 'Kill');
-            }, 1);
-        }, 0.2);
+        game.runAfterDelaySeconds(() => {
+            Instance.EntFireAtName('maodie_moving_' + suffix, 'SetMaxSpeed', getSpeed());
+            Instance.EntFireAtName('maodie_moving_' + suffix, 'SetSpeedReal', getSpeed());
+            Instance.EntFireAtName('maodie_moving_' + suffix, 'MoveToPathNode', 'maodie_track_end_' + suffix);
+        }, judgeDelay - trackTime);
+
+        game.runAfterDelaySeconds(() => {
+            Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,0');
+        }, judgeDelay - GOOD_RANGE);
+
+        game.runAfterDelaySeconds(() => {
+            Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,1');
+        }, judgeDelay);
+
+        game.runAfterDelaySeconds(() => {
+            if (suffix in this.liveTargets) {
+                Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser2');
+
+                this.gameplayStatus.poor++;
+                this.gameplayStatus.combo = 0;
+                this.updateText();
+            }
+        }, judgeDelay + POOR_RANGE);
     }
 
     onTick() {
+        if (this.musicStopped) {
+            return;
+        }
+
         const now = Instance.GetGameTime();
         const delta = this.lastTime - now;
         this.lastTime = now;
 
-        const musicTime = now - this.startPlayTime;
+        const musicTime = this.time;
 
-        Instance.Msg(musicTime);
+        // Instance.Msg(musicTime);
 
         const notes = chart.NoteDataList;
 
-        if (musicTime < 0 || this.musicStopped) {
-            return;
-        }
-
-        if (!this.musicStarted) {
+        if (musicTime > 0 && !this.musicStarted) {
             this.musicStarted = true;
 
             Instance.EntFireAtName('maodie_sound_player', 'StartSound');
+            runServerCommand("say play");
         }
 
         for (let i = this.lastNoteIndex; i < notes.length; i++) {
             const note = notes[i];
 
-            if (musicTime < note.Time - 0.3) {
+            if (musicTime < note.Time - (trackTime + waitTime + 0.1)) {
                 break;
             }
 
-            this.spawnMaodie(note.LaneId + 1);
+            this.spawnMaodie(note.LaneId, note.Time, i);
             this.lastNoteIndex++;
         }
 
         if (this.lastNoteIndex >= notes.length) {
             this.musicStopped = true;
+
+            Instance.EntFireAtName('maodie_start_text', 'SetMessage', "PRESS TO START");
         }
     }
 
-    onTargetSpawned(suffix: string) {
-        Instance.Msg('target ' + suffix + ' spawned');
+    start() {
+        if (!this.postInited) {
+            runServerCommand("say Not ready yet.");
+            return;
+        }
 
-        game.runAfterDelaySeconds(() => {
-            Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser2');
-        }, 2);
+        if (!this.musicStopped) {
+            return;
+        }
+
+        Instance.EntFireAtName('maodie_start_text', 'SetMessage', "GET READY");
+
+        this.musicStopped = true;
+        Instance.EntFireAtName('maodie_sound_player', 'StopSound');
+        Instance.EntFireAtName('maodie_sound_player', 'Kill');
+
+        const barTime = chart.BarLineList[1] - chart.BarLineList[0];
+        const tickTime = barTime / 4;
+        let blankTime = -(chart.BarLineList[0] - (barTime * 2));
+
+        while (blankTime < barTime * 2) {
+            blankTime += barTime;
+        }
+
+        this.gameplayStatus = {
+            perfect: 0,
+            great: 0,
+            good: 0,
+            bad: 0,
+            poor: 0,
+            headshot: 0,
+            bodyshot: 0,
+            combo: 0,
+            maxcombo: 0,
+            offset: 0,
+        };
+
+        game.runNextTick(() => {
+            createEntity({
+                class: 'point_soundevent',
+                keyValues: {
+                    targetName: 'maodie_sound_player',
+                    soundName: 'music.manbo_namie_sometimes_hachimi',
+                },
+            });
+
+            this.musicStartTime = Instance.GetGameTime() + blankTime;
+            this.musicStopped = false;
+            this.musicStarted = false;
+            this.lastNoteIndex = 0;
+
+            const se = createSoundEvent('effect.maodie_ha');
+
+            for (let i = 1; i <= 4; i++) {
+                game.runAfterDelaySeconds(() => {
+                    se.play();
+                }, blankTime - (tickTime * i));
+            }
+
+            game.runAfterDelaySeconds(() => {
+                se.kill();
+            }, blankTime);
+        });
+    }
+
+    onTargetSpawned(suffix: string) {
+        // Instance.Msg('target ' + suffix + ' spawned');
     }
 
     onTargetKilled(suffix: number, where: number) {
-        Instance.Msg('target' + suffix + ' hit by ' + where);
+        if (!(suffix in this.liveTargets)) {
+            return;
+        }
 
+        const target = this.liveTargets[suffix];
+        const note = chart.NoteDataList[target.index];
+        if (this.time < note.Time - POOR_RANGE) {
+            return;
+        }
+
+        const offset = note.Time - this.time;
+        this.gameplayStatus.offset = (this.gameplayStatus.offset + offset) / 2;
+
+        const judgeDelta = Math.abs(offset);
+        let judgement = 5;
+
+        if (judgeDelta < PGREAT_RANGE) {
+            judgement = 0;
+            this.gameplayStatus.perfect++;
+        } else if (judgeDelta < GREAT_RANGE) {
+            judgement = 1;
+            this.gameplayStatus.great++;
+        } else if (judgeDelta < GOOD_RANGE) {
+            judgement = 2;
+            this.gameplayStatus.good++;
+        } else if (judgeDelta < BAD_RANGE) {
+            judgement = 3;
+            this.gameplayStatus.bad++;
+        } else if (judgeDelta < POOR_RANGE) {
+            judgement = 4;
+            this.gameplayStatus.poor++;
+        }
+
+        if (where == 1) {
+            this.gameplayStatus.headshot++;
+        }
+
+        if (judgement <= 2) {
+            this.gameplayStatus.combo++;
+
+            if (this.gameplayStatus.combo > this.gameplayStatus.maxcombo) {
+                this.gameplayStatus.maxcombo = this.gameplayStatus.combo;
+            }
+        } else {
+            if (this.gameplayStatus.combo > 10) {
+                this.combobreakEffect.play();
+            }
+
+            this.gameplayStatus.combo = 0;
+
+        }
+
+        if (this.gameplayStatus.combo > 5) {
+            this.judgeTipControllers[note.LaneId].setText(`${this.gameplayStatus.combo}\n${JUDGE_TO_TEXT[judgement]}`);
+
+            if ((this.gameplayStatus.combo % 20) == 0) {
+                this.comboEffects[Math.floor(Math.random() * this.comboEffects.length)].play();
+            }
+        } else {
+            this.judgeTipControllers[note.LaneId].setText(`${JUDGE_TO_TEXT[judgement]}`);
+        }
+
+        this.updateText();
+
+        Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser2');
         Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,2');
+
+        this.hitmarkerEffect.play();
         delete this.liveTargets[suffix];
     }
-}
 
-Instance.PublicMethod("InputReceived", (arg: string) => {
-    Instance.Msg(arg);
-    runServerCommand(arg)
-})
+    updateText() {
+        const text = 'STATUS\n\n' +
+            `PERFECT   : ${this.gameplayStatus.perfect}\n` +
+            `GREAT     : ${this.gameplayStatus.great}\n` +
+            `GOOD      : ${this.gameplayStatus.good}\n` +
+            `BAD       : ${this.gameplayStatus.bad}\n` +
+            `POOR      : ${this.gameplayStatus.poor}\n` +
+            `AVG LAT   : ${this.gameplayStatus.offset}\n` +
+            `HEADSHOT  : ${this.gameplayStatus.headshot}\n` +
+            `MAX COMBO : ${this.gameplayStatus.maxcombo}\n`;
+
+        Instance.EntFireAtName('maodie_judge_text', 'SetMessage', text);
+    }
+}
 
 Instance.PublicMethod("HachimiInit", (suffix: string) => {
     const inst = HachimiGame.instance;
@@ -213,6 +464,15 @@ Instance.PublicMethod("HachimiInit", (suffix: string) => {
     inst.postInit();
 });
 
+Instance.PublicMethod("HachimiStart", () => {
+    const inst = HachimiGame.instance;
+    if (!inst) {
+        return;
+    }
+
+    inst.start();
+});
+
 Instance.PublicMethod("HachimiTargetKilled", (paramsJson: string) => {
     const inst = HachimiGame.instance;
     if (!inst) {
@@ -221,7 +481,7 @@ Instance.PublicMethod("HachimiTargetKilled", (paramsJson: string) => {
 
     const [suffix, where] = JSON.parse(paramsJson) as number[];
     inst.onTargetKilled(suffix, where);
-})
+});
 
 Instance.PublicMethod("HachimiTargetSpawned", (suffix: string) => {
     const inst = HachimiGame.instance;
@@ -230,9 +490,13 @@ Instance.PublicMethod("HachimiTargetSpawned", (suffix: string) => {
     }
 
     inst.onTargetSpawned(suffix);
-})
+});
+
 
 game.on('round_start', () => {
     HachimiGame.init();
-    Instance.EntFireAtName('s2ts-script', 'test', 'aaa');
 });
+
+runServerCommand("sv_cheats 1");
+runServerCommand("mp_maxmoney 65535");
+runServerCommand("mp_startmoney 65535");
