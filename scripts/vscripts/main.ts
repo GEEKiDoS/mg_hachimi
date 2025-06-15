@@ -139,6 +139,8 @@ class HachimiGame {
     combobreakEffect: SoundEffect;
     comboEffects: SoundEffect[];
 
+    lastLineNoteTime: number[] = [-1, -1, -1, -1, -1, -1, -1];
+
     constructor() {
         game.runNextTick(() => {
             Instance.EntFireAtName('maodie_spawnpoint_suffix_finder', "ForceSpawn");
@@ -353,6 +355,8 @@ class HachimiGame {
 
         this.updateText();
 
+        this.lastLineNoteTime = [-1, -1, -1, -1, -1, -1, -1];
+
         game.runNextTick(() => {
             createEntity({
                 class: 'point_soundevent',
@@ -392,15 +396,24 @@ class HachimiGame {
 
         const target = this.liveTargets[suffix];
         const note = this.chart.NoteDataList[target.index];
-        if (this.time < note.Time - POOR_RANGE) {
+        const offset = note.Time - this.time;
+
+        if (offset > POOR_RANGE) {
             return;
         }
 
-        const offset = note.Time - this.time;
+        const judgeDelta = Math.abs(offset);
         this.gameplayStatus.offset = (this.gameplayStatus.offset + offset) / 2;
 
-        const judgeDelta = Math.abs(offset);
         const judgement = (() => {
+            // full auto protection
+            if (offset > GREAT_RANGE &&
+                (note.Time - this.lastLineNoteTime[note.LaneId]) < POOR_RANGE
+            ) {
+                this.gameplayStatus.perfect++;
+                return 0;
+            }
+
             if (judgeDelta < PGREAT_RANGE) {
                 this.gameplayStatus.perfect++;
                 return 0;
@@ -418,6 +431,8 @@ class HachimiGame {
             this.gameplayStatus.poor++;
             return 4;
         })();
+
+        this.lastLineNoteTime[note.LaneId] = note.Time;
 
         if (where == 0) {
             this.gameplayStatus.headshot++;
@@ -463,7 +478,7 @@ class HachimiGame {
             `GOOD      : ${this.gameplayStatus.good}\n` +
             `BAD       : ${this.gameplayStatus.bad}\n` +
             `POOR      : ${this.gameplayStatus.poor}\n` +
-            `AVG LAT   : ${this.gameplayStatus.offset}\n` +
+            '\n' +
             `HEADSHOT  : ${this.gameplayStatus.headshot}\n` +
             `MAX COMBO : ${this.gameplayStatus.maxcombo}\n`;
 
@@ -568,3 +583,5 @@ game.on('round_start', () => {
 runServerCommand("sv_cheats 1");
 runServerCommand("mp_maxmoney 65535");
 runServerCommand("mp_startmoney 65535");
+runServerCommand("mp_buytime 65535");
+runServerCommand("weapon_accuracy_nospread 1");
