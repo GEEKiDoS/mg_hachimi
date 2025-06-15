@@ -5,8 +5,17 @@
 		type = "csgo_music"
 		use_hrtf = 0.0
 		volume = 0.8
-		vsnd_files = "sounds/manbo_namie_sometimes_hachimi.vsnd"
+		vsnd_files = "sounds/songs/manbo_namie_sometimes_hachimi.vsnd"
 	}
+
+	"music.oiiaioiiiiai" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/oiiaioiiiiai.vsnd"
+	}
+
 
 	"effect.maodie_ha" =
 	{

@@ -22,7 +22,7 @@ Layer0
 	g_flLayer1EmissiveLevel "0.596"
 	g_flLayer1Offset "-100.000"
 	g_vLayer1EmissiveTint "[1.000000 1.000000 1.000000 0.000000]"
-	TextureLayer1Color "materials/covers/manbo_manbo_sometimes_hachimi.png"
+	TextureLayer1Color "materials/covers/oiiaioiiiai.jpg"
 	TextureLayer1Mask "[1.000000 1.000000 1.000000 0.000000]"
 
 	//---- Layer 2 ----

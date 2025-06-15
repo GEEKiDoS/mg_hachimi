@@ -1,7 +1,7 @@
 /// <reference types="s2ts/types/cspointscript" />
 import { Instance } from "cspointscript"
 import { runServerCommand, game, addOutputByName, createEntity, uniqueId, Vector } from "s2ts/counter-strike"
-import { chart } from './chart';
+import { charts } from './chart';
 
 const START_POINT = [1920, 736];
 const END_POINT = [576, 320];
@@ -86,9 +86,29 @@ class HachimiGame {
         this.instance = new HachimiGame();
     }
 
+    musicIndex = 0;
+
+    get music() {
+        return charts[this.musicIndex];
+    }
+
+    get chart() {
+        return this.music.chart;
+    }
+
+    get musicName() {
+        return this.music.name;
+    }
+
+    get musicSndEvent() {
+        return this.music.sndEvent;
+    }
+
+    static lastTemplateSuffix = 1;
+    lastTrySuffix = HachimiGame.lastTemplateSuffix;
+
     postInited = false;
     templateSuffix = 1;
-    lastTrySuffix = 1;
     liveTargets: Record<string, {
         index: number
     }> = {};
@@ -199,6 +219,8 @@ class HachimiGame {
         Instance.EntFireAtName('maodie_spawnpoint_' + spawnPoint, "ForceSpawn");
 
         const suffix = this.templateSuffix++;
+        HachimiGame.lastTemplateSuffix = this.templateSuffix;
+
         game.runAfterDelayTicks(() => {
             addOutputByName('target_maodie_hit_head_' + suffix, {
                 outputName: 'OnHealthChanged',
@@ -248,13 +270,7 @@ class HachimiGame {
         }, judgeDelay);
 
         game.runAfterDelaySeconds(() => {
-            if (suffix in this.liveTargets) {
-                Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser2');
-
-                this.gameplayStatus.poor++;
-                this.gameplayStatus.combo = 0;
-                this.updateText();
-            }
+            this.onTargetKilled(suffix, 1);
         }, judgeDelay + POOR_RANGE);
     }
 
@@ -271,7 +287,7 @@ class HachimiGame {
 
         // Instance.Msg(musicTime);
 
-        const notes = chart.NoteDataList;
+        const notes = this.chart.NoteDataList;
 
         if (musicTime > 0 && !this.musicStarted) {
             this.musicStarted = true;
@@ -314,9 +330,9 @@ class HachimiGame {
         Instance.EntFireAtName('maodie_sound_player', 'StopSound');
         Instance.EntFireAtName('maodie_sound_player', 'Kill');
 
-        const barTime = chart.BarLineList[1] - chart.BarLineList[0];
+        const barTime = this.chart.BarLineList[1] - this.chart.BarLineList[0];
         const tickTime = barTime / 4;
-        let blankTime = -(chart.BarLineList[0] - (barTime * 2));
+        let blankTime = -(this.chart.BarLineList[0] - (barTime * 2));
 
         while (blankTime < barTime * 2) {
             blankTime += barTime;
@@ -335,12 +351,14 @@ class HachimiGame {
             offset: 0,
         };
 
+        this.updateText();
+
         game.runNextTick(() => {
             createEntity({
                 class: 'point_soundevent',
                 keyValues: {
                     targetName: 'maodie_sound_player',
-                    soundName: 'music.manbo_namie_sometimes_hachimi',
+                    soundName: this.musicSndEvent,
                 },
             });
 
@@ -373,7 +391,7 @@ class HachimiGame {
         }
 
         const target = this.liveTargets[suffix];
-        const note = chart.NoteDataList[target.index];
+        const note = this.chart.NoteDataList[target.index];
         if (this.time < note.Time - POOR_RANGE) {
             return;
         }
@@ -382,30 +400,31 @@ class HachimiGame {
         this.gameplayStatus.offset = (this.gameplayStatus.offset + offset) / 2;
 
         const judgeDelta = Math.abs(offset);
-        let judgement = 5;
+        const judgement = (() => {
+            if (judgeDelta < PGREAT_RANGE) {
+                this.gameplayStatus.perfect++;
+                return 0;
+            } else if (judgeDelta < GREAT_RANGE) {
+                this.gameplayStatus.great++;
+                return 1;
+            } else if (judgeDelta < GOOD_RANGE) {
+                this.gameplayStatus.good++;
+                return 2;
+            } else if (judgeDelta < BAD_RANGE) {
+                this.gameplayStatus.bad++;
+                return 3;
+            }
 
-        if (judgeDelta < PGREAT_RANGE) {
-            judgement = 0;
-            this.gameplayStatus.perfect++;
-        } else if (judgeDelta < GREAT_RANGE) {
-            judgement = 1;
-            this.gameplayStatus.great++;
-        } else if (judgeDelta < GOOD_RANGE) {
-            judgement = 2;
-            this.gameplayStatus.good++;
-        } else if (judgeDelta < BAD_RANGE) {
-            judgement = 3;
-            this.gameplayStatus.bad++;
-        } else if (judgeDelta < POOR_RANGE) {
-            judgement = 4;
             this.gameplayStatus.poor++;
-        }
+            return 4;
+        })();
 
-        if (where == 1) {
+        if (where == 0) {
             this.gameplayStatus.headshot++;
         }
 
         if (judgement <= 2) {
+            this.hitmarkerEffect.play();
             this.gameplayStatus.combo++;
 
             if (this.gameplayStatus.combo > this.gameplayStatus.maxcombo) {
@@ -417,7 +436,6 @@ class HachimiGame {
             }
 
             this.gameplayStatus.combo = 0;
-
         }
 
         if (this.gameplayStatus.combo > 5) {
@@ -435,7 +453,6 @@ class HachimiGame {
         Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser2');
         Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,2');
 
-        this.hitmarkerEffect.play();
         delete this.liveTargets[suffix];
     }
 
@@ -452,6 +469,13 @@ class HachimiGame {
 
         Instance.EntFireAtName('maodie_judge_text', 'SetMessage', text);
     }
+
+    updateMusic() {
+        runServerCommand("say " + this.music.name);
+        Instance.EntFireAtName("hachimi_monitor", "SetBodyGroup", "cover," + this.musicIndex);
+        Instance.EntFireAtName("maodie_title_text", "SetMessage", this.music.name);
+        Instance.EntFireAtName("maodie_charter_text", "SetMessage", this.music.charter);
+    }
 }
 
 Instance.PublicMethod("HachimiInit", (suffix: string) => {
@@ -462,6 +486,7 @@ Instance.PublicMethod("HachimiInit", (suffix: string) => {
 
     inst.templateSuffix = parseInt(suffix) + 1;
     inst.postInit();
+    inst.updateMusic();
 });
 
 Instance.PublicMethod("HachimiStart", () => {
@@ -492,6 +517,49 @@ Instance.PublicMethod("HachimiTargetSpawned", (suffix: string) => {
     inst.onTargetSpawned(suffix);
 });
 
+Instance.PublicMethod("HachimiMusicNext", () => {
+    const inst = HachimiGame.instance;
+    if (!inst || !inst.postInited) {
+        return;
+    }
+
+    if (inst.musicIndex - 1 < 0) {
+        inst.musicIndex = charts.length - 1;
+    } else {
+        inst.musicIndex--;
+    }
+
+    inst.updateMusic();
+});
+
+Instance.PublicMethod("HachimiMusicPrev", () => {
+    const inst = HachimiGame.instance;
+    if (!inst || !inst.postInited) {
+        return;
+    }
+
+    if (inst.musicIndex + 1 >= charts.length) {
+        inst.musicIndex = 0;
+    } else {
+        inst.musicIndex++;
+    }
+
+    inst.updateMusic();
+});
+
+Instance.PublicMethod("HachimiGreenNumAdd", (numStr: string) => {
+    const num = parseFloat(numStr);
+    trackTime += num;
+
+    if (trackTime < 0.01) {
+        trackTime = 0.01;
+    } else if (trackTime > 5) {
+        trackTime = 5;
+    }
+
+    const greenNumber = Math.floor((trackTime * 1000 * 3) / 5);
+    Instance.EntFireAtName("maodie_green_num_text", "SetMessage", greenNumber.toString());
+});
 
 game.on('round_start', () => {
     HachimiGame.init();

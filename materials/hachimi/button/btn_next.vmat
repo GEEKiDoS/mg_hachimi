@@ -5,10 +5,13 @@ Layer0
 	shader "csgo_complex.vfx"
 
 	//---- PBR ----
-	F_METALNESS_TEXTURE 1
+	F_SELF_ILLUM 1
+
+	//---- Translucent ----
+	F_TRANSLUCENT 1
 
 	//---- Ambient Occlusion ----
-	TextureAmbientOcclusion "materials/hachimi/props/mao_shelf/dark_wood_ao.png"
+	TextureAmbientOcclusion "materials/default/default_ao.tga"
 
 	//---- Color ----
 	g_flModelTintAmount "1.000"
@@ -20,49 +23,31 @@ Layer0
 	g_vTexCoordOffset "[0.000 0.000]"
 	g_vTexCoordScale "[1.000 1.000]"
 	g_vTexCoordScrollSpeed "[0.000 0.000]"
-	TextureColor "materials/hachimi/props/mao_shelf/dark_wood_albedo.png"
+	TextureColor "materials/hachimi/button/next.png"
 
 	//---- Fog ----
 	g_bFogEnabled "1"
 
 	//---- Lighting ----
-	TextureMetalness "materials/hachimi/props/mao_shelf/dark_wood_metallic.png"
-	TextureRoughness "materials/hachimi/props/mao_shelf/dark_wood_roughness.png"
+	g_flMetalness "0.000"
+	TextureRoughness "materials/default/default_rough.tga"
 
 	//---- Normal Map ----
-	TextureNormal "materials/hachimi/props/mao_shelf/dark_wood_normal.png"
+	TextureNormal "materials/default/default_normal.tga"
+
+	//---- Self Illum ----
+	g_flSelfIllumAlbedoFactor "1.000"
+	g_flSelfIllumBrightness "0.000"
+	g_flSelfIllumScale "1.000"
+	g_vSelfIllumScrollSpeed "[0.000 0.000]"
+	g_vSelfIllumTint "[1.000000 1.000000 1.000000 0.000000]"
+	TextureSelfIllumMask ""
 
 	//---- Texture Address Mode ----
 	g_nTextureAddressModeU "0" // Wrap
 	g_nTextureAddressModeV "0" // Wrap
 
-	UnusedVariables
-	{
-		"g_flMetalness" "0.123"
-	}
-
-
-	VariableState
-	{
-		"Ambient Occlusion"
-		{
-		}
-		"Color"
-		{
-		}
-		"Fog"
-		{
-		}
-		"Lighting"
-		{
-			"Roughness" 0
-			"Metalness" 0
-		}
-		"Normal Map"
-		{
-		}
-		"Texture Address Mode"
-		{
-		}
-	}
+	//---- Translucent ----
+	g_flOpacityScale "1.000"
+	TextureTranslucency "materials/hachimi/button/mask.png"
 }
