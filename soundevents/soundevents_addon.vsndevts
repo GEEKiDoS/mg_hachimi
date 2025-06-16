@@ -16,6 +16,21 @@
 		vsnd_files = "sounds/songs/oiiaioiiiiai.vsnd"
 	}
 
+	"music.hachimi_winter" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/hachimi_winter.vsnd"
+	}
+
+	"music.haxuedamaoxian" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/haxuedamaoxian.vsnd"
+	}
 
 	"effect.maodie_ha" =
 	{
