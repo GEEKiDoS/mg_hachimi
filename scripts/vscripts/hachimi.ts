@@ -16,7 +16,7 @@ export class HachimiGame {
     musicIndex = 0;
 
     get speed() {
-        return (C.TRACK_LENGTH - 128) / this.trackTime;
+        return (C.TRACK_LENGTH - C.JUDGE_LINE) / this.trackTime;
     }
 
     get music() {
@@ -106,7 +106,7 @@ export class HachimiGame {
                     if (this.postInited) {
                         return;
                     }
-                    
+
                     if (this.SCAN_PER_TICK < 500) {
                         this.SCAN_PER_TICK += 10;
                         Instance.Msg("Update scan per tick to " + this.SCAN_PER_TICK);
@@ -438,6 +438,7 @@ export class HachimiGame {
 
         Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser2');
         Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,2');
+        Instance.EntFireAtName('maodie_moving_' + suffix, 'Stop');
 
         this.suffixToNoteIndexMap.delete(suffix);
     }
