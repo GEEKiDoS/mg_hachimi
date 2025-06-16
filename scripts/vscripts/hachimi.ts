@@ -77,18 +77,18 @@ export class HachimiGame {
         });
     }
 
+    SCAN_PER_TICK = 50;
+
     findSuffix() {
         if (this.postInited) {
             return;
         }
 
         game.runNextTick(() => {
-            const SCAN_PER_TICK = 50;
-
             const suffix = this.lastTrySuffix;
-            this.lastTrySuffix += SCAN_PER_TICK;
+            this.lastTrySuffix += this.SCAN_PER_TICK;
 
-            for (let i = 0; i < SCAN_PER_TICK; i++) {
+            for (let i = 0; i < this.SCAN_PER_TICK; i++) {
                 addOutputByName('maodie_relay_' + (suffix + i), {
                     outputName: 'OnUser3',
                     targetName: 's2ts-script',
@@ -98,11 +98,20 @@ export class HachimiGame {
             }
 
             game.runNextTick(() => {
-                for (let i = 0; i < SCAN_PER_TICK; i++) {
+                for (let i = 0; i < this.SCAN_PER_TICK; i++) {
                     Instance.EntFireAtName('maodie_relay_' + (suffix + i), 'FireUser3');
                 }
 
                 game.runNextTick(() => {
+                    if (this.postInited) {
+                        return;
+                    }
+                    
+                    if (this.SCAN_PER_TICK < 500) {
+                        this.SCAN_PER_TICK += 10;
+                        Instance.Msg("Update scan per tick to " + this.SCAN_PER_TICK);
+                    }
+
                     this.findSuffix();
                 });
             });
@@ -142,7 +151,7 @@ export class HachimiGame {
             return;
         }
 
-        Instance.Msg('spawn on ' + spawnPoint);
+        // Instance.Msg('spawn on ' + spawnPoint);
         Instance.EntFireAtName('maodie_spawnpoint_' + spawnPoint, "ForceSpawn");
 
         const suffix = this.templateSuffix++;
@@ -174,7 +183,7 @@ export class HachimiGame {
         this.suffixToNoteIndexMap.set(suffix, noteIndex);
 
         const judgeDelay = noteTime - this.time;
-        Instance.Msg(judgeDelay);
+        // Instance.Msg(judgeDelay);
 
         game.runAfterDelaySeconds(() => {
             Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser1');
@@ -204,11 +213,12 @@ export class HachimiGame {
     }
 
     onTick() {
+        this.processKilledTargets();
+        this.judgeTipControllers.forEach(v => v.onTick());
+
         if (!this.postInited || this.musicStopped) {
             return;
         }
-
-        this.judgeTipControllers.forEach(v => v.onTick());
 
         const now = Instance.GetGameTime();
         const delta = this.lastTime - now;
@@ -283,6 +293,7 @@ export class HachimiGame {
         };
 
         this.updateText();
+        this.chart.NoteDataList = this.chart.NoteDataList.sort((a, b) => a.Time - b.Time);
 
         this.lastNoteTimes.clear();
         const lastLaneNoteTimes = [-1, -1, -1, -1, -1, -1, -1];
@@ -352,12 +363,13 @@ export class HachimiGame {
 
     processKilledTarget(suffix: number, index: number, where: number) {
         const note = this.chart.NoteDataList[index];
-        const lastNoteTime = this.lastNoteTimes.get(note.LaneId);
+        const lastNoteTime = this.lastNoteTimes.get(index);
 
         if (lastNoteTime && lastNoteTime != -1) {
             const minJudgeTime = lastNoteTime + (note.Time - lastNoteTime) / 2;
             Instance.Msg("time = " + this.time);
             Instance.Msg("minJudgeTime = " + minJudgeTime);
+            Instance.Msg("lastNoteTime = " + lastNoteTime);
 
             if (this.time < minJudgeTime) {
                 return;
@@ -437,7 +449,8 @@ export class HachimiGame {
             `GOOD      : ${this.gameplayStatus.good}\n` +
             `BAD       : ${this.gameplayStatus.bad}\n` +
             `POOR      : ${this.gameplayStatus.poor}\n` +
-            `AVG LAT   : ${this.gameplayStatus.offset}\n` +
+            // `AVG LAT   : ${this.gameplayStatus.offset}\n` +
+            '\n' +
             `HEADSHOT  : ${this.gameplayStatus.headshot}\n` +
             `MAX COMBO : ${this.gameplayStatus.maxcombo}\n`;
 

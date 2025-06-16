@@ -2,45 +2,57 @@
 
 Layer0
 {
-	shader "csgo_simple_3layer_parallax.vfx"
+	shader "csgo_complex.vfx"
+
+	//---- Animation ----
+	F_TEXTURE_ANIMATION 1
+
+	//---- PBR ----
+	F_SELF_ILLUM 1
 
 	//---- Ambient Occlusion ----
 	TextureAmbientOcclusion "materials/default/default_ao.tga"
 
 	//---- Color ----
+	g_flModelTintAmount "1.000"
+	g_flTexCoordRotation "0.000"
+	g_nScaleTexCoordUByModelScaleAxis "0" // None
+	g_nScaleTexCoordVByModelScaleAxis "0" // None
 	g_vColorTint "[1.000000 1.000000 1.000000 0.000000]"
+	g_vTexCoordCenter "[0.500 0.500]"
+	g_vTexCoordOffset "[0.000 0.000]"
+	g_vTexCoordScale "[1.000 1.000]"
 	g_vTexCoordScrollSpeed "[0.000 0.000]"
-	TextureColor "materials/default/default_color.tga"
+	TextureColor "materials/covers/manbo_manbo_sometimes_hachimi.png"
 
 	//---- Fog ----
 	g_bFogEnabled "1"
 
-	//---- Layer 0 ----
-	TextureLayer0Mask "[0.000000 0.000000 0.000000 0.000000]"
-
-	//---- Layer 1 ----
-	g_flLayer1EmissiveLevel "0.596"
-	g_flLayer1Offset "-100.000"
-	g_vLayer1EmissiveTint "[1.000000 1.000000 1.000000 0.000000]"
-	TextureLayer1Color "materials/covers/manbo_manbo_sometimes_hachimi.png"
-	TextureLayer1Mask "[1.000000 1.000000 1.000000 0.000000]"
-
-	//---- Layer 2 ----
-	g_flLayer2EmissiveLevel "0.000"
-	g_flLayer2Offset "-1000.000"
-	g_vLayer2EmissiveTint "[1.000000 1.000000 1.000000 0.000000]"
-	TextureLayer2Color "[0.000000 0.000000 0.000000 0.000000]"
-
 	//---- Lighting ----
 	g_flMetalness "0.000"
-	TextureRoughness "materials/default/default_rough.tga"
+	TextureRoughness "[0.501961 0.501961 0.501961 0.000000]"
 
 	//---- Normal Map ----
-	TextureNormal "materials/default/default_normal.tga"
+	TextureNormal "[0.501961 0.501961 1.000000 0.000000]"
+
+	//---- Self Illum ----
+	g_flSelfIllumAlbedoFactor "1.000"
+	g_flSelfIllumBrightness "0.000"
+	g_flSelfIllumScale "1.000"
+	g_vSelfIllumScrollSpeed "[0.000 0.000]"
+	g_vSelfIllumTint "[1.000000 1.000000 1.000000 0.000000]"
+	TextureSelfIllumMask "[1.000000 1.000000 1.000000 0.000000]"
 
 	//---- Texture Address Mode ----
-	g_nTextureAddressModeU "3" // Wrap
-	g_nTextureAddressModeV "3" // Wrap
+	g_nTextureAddressModeU "0" // Border
+	g_nTextureAddressModeV "0" // Border
+
+	//---- Texture Animation ----
+	g_flAnimationFrame "0.000"
+	g_flAnimationTimeOffset "0.000"
+	g_flAnimationTimePerFrame "0.050"
+	g_nNumAnimationCells "109"
+	g_vAnimationGrid "[10 11]"
 
 	UnusedVariables
 	{
@@ -62,15 +74,6 @@ Layer0
 		"Fog"
 		{
 		}
-		"Layer 0"
-		{
-		}
-		"Layer 1"
-		{
-		}
-		"Layer 2"
-		{
-		}
 		"Lighting"
 		{
 			"Roughness" 0
@@ -79,7 +82,13 @@ Layer0
 		"Normal Map"
 		{
 		}
+		"Self Illum"
+		{
+		}
 		"Texture Address Mode"
+		{
+		}
+		"Texture Animation"
 		{
 		}
 	}

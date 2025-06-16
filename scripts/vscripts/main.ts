@@ -44,7 +44,7 @@ Instance.PublicMethod("HachimiTargetSpawned", (suffix: string) => {
     inst.onTargetSpawned(suffix);
 });
 
-Instance.PublicMethod("HachimiMusicNext", () => {
+Instance.PublicMethod("HachimiMusicPrev", () => {
     const inst = HachimiGame.instance;
     if (!inst || !inst.postInited) {
         return;
@@ -59,7 +59,7 @@ Instance.PublicMethod("HachimiMusicNext", () => {
     inst.updateMusic();
 });
 
-Instance.PublicMethod("HachimiMusicPrev", () => {
+Instance.PublicMethod("HachimiMusicNext", () => {
     const inst = HachimiGame.instance;
     if (!inst || !inst.postInited) {
         return;

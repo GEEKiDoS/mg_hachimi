@@ -20,7 +20,7 @@
 	{
 		type = "csgo_music"
 		use_hrtf = 0.0
-		volume = 0.8
+		volume = 1.0
 		vsnd_files = "sounds/songs/hachimi_winter.vsnd"
 	}
 
