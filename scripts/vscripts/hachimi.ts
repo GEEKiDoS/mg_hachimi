@@ -138,6 +138,8 @@ export class HachimiGame {
         this.hitmarkerEffect = createSoundEvent('effect.hitmarker');
         this.combobreakEffect = createSoundEvent('effect.siren_laugh');
         this.comboEffects = ['effect.wow', 'effect.manbo', 'effect.oye'].map(v => createSoundEvent(v));
+
+        runServerCommand("exec music_list.cfg");
     }
 
     get time() {
