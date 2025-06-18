@@ -2,7 +2,6 @@
 import { Instance } from "cspointscript"
 import { runServerCommand, game } from "s2ts/counter-strike"
 import { charts } from './musics';
-import { SoundEffect } from "./sound";
 import { HachimiGame } from "./hachimi";
 
 Instance.PublicMethod("HachimiInit", (suffix: string) => {
@@ -111,6 +110,8 @@ Instance.PublicMethod("Music_Begin", () => {
         barLines: [],
         notes: [],
     };
+
+    Instance.Msg("Clear currentMusic");
 });
 
 Instance.PublicMethod("Music_SetName", (name: string) => {
@@ -150,6 +151,8 @@ Instance.PublicMethod("Music_End", () => {
             NoteDataList: currentMusic.notes,
         }
     }
+
+    Instance.Msg(`Add Music: ${music.name} ${music.charter}, Note count: ${music.chart.NoteDataList.length}`);
 
     const existingIndex = charts.findIndex(v => v.name == music.name && v.charter == music.charter);
     if (existingIndex > 0) {

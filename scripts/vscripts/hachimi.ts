@@ -6,6 +6,10 @@ import { C } from "./constants";
 import { SoundEffect, createSoundEvent } from "./sound";
 import { JudgeTipController } from "./judge_tip_controller";
 
+function prependSpace(value: { toString: () => string }, count: number = 12) {
+    return value.toString().padStart(count, ' ');
+}
+
 export class HachimiGame {
     static instance: HachimiGame | undefined = undefined;
     static init() {
@@ -62,6 +66,8 @@ export class HachimiGame {
         combo: 0,
         maxcombo: 0,
         offset: 0,
+        late: 0,
+        early: 0,
     };
 
     judgeTipControllers: JudgeTipController[] = [];
@@ -140,6 +146,7 @@ export class HachimiGame {
         this.comboEffects = ['effect.wow', 'effect.manbo', 'effect.oye'].map(v => createSoundEvent(v));
 
         runServerCommand("exec music_list.cfg");
+        this.updateText();
     }
 
     get time() {
@@ -198,19 +205,17 @@ export class HachimiGame {
         }, judgeDelay - this.trackTime);
 
         game.runAfterDelaySeconds(() => {
-            Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,0');
+            Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,1');
         }, judgeDelay - C.GOOD_RANGE);
 
         game.runAfterDelaySeconds(() => {
             if (!this.suffixToNoteIndexMap.has(suffix)) {
                 return;
             }
-
-            Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,1');
         }, judgeDelay);
 
         game.runAfterDelaySeconds(() => {
-            this.onTargetKilled(suffix, 1);
+            this.onTargetKilled(suffix, 2);
         }, judgeDelay + C.POOR_RANGE);
     }
 
@@ -292,6 +297,8 @@ export class HachimiGame {
             combo: 0,
             maxcombo: 0,
             offset: 0,
+            late: 0,
+            early: 0,
         };
 
         this.updateText();
@@ -369,9 +376,6 @@ export class HachimiGame {
 
         if (lastNoteTime && lastNoteTime != -1) {
             const minJudgeTime = lastNoteTime + (note.Time - lastNoteTime) / 2;
-            Instance.Msg("time = " + this.time);
-            Instance.Msg("minJudgeTime = " + minJudgeTime);
-            Instance.Msg("lastNoteTime = " + lastNoteTime);
 
             if (this.time < minJudgeTime) {
                 return;
@@ -385,7 +389,6 @@ export class HachimiGame {
         this.lastNoteTimes[note.LaneId] = note.Time;
 
         const offset = note.Time - this.time;
-        this.gameplayStatus.offset = (this.gameplayStatus.offset + offset) / 2;
 
         const judgeDelta = Math.abs(offset);
         const judgement = (() => {
@@ -407,8 +410,22 @@ export class HachimiGame {
             return 4;
         })();
 
+        if (judgement != 4) {
+            this.gameplayStatus.offset = (this.gameplayStatus.offset + offset) / 2;
+        }
+
+        if (judgement > 0 && judgement < 4) {
+            if (offset > 0) {
+                this.gameplayStatus.early++;
+            } else {
+                this.gameplayStatus.late++;
+            }
+        }
+
         if (where == 0) {
             this.gameplayStatus.headshot++;
+        } else if (where == 1) {
+            this.gameplayStatus.bodyshot++;
         }
 
         if (judgement <= 2) {
@@ -439,25 +456,57 @@ export class HachimiGame {
         this.updateText();
 
         Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser2');
-        Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,2');
+        Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,0');
         Instance.EntFireAtName('maodie_moving_' + suffix, 'Stop');
 
         this.suffixToNoteIndexMap.delete(suffix);
     }
 
     updateText() {
+        let headshotRate = this.gameplayStatus.headshot / (this.gameplayStatus.headshot + this.gameplayStatus.bodyshot);
+        if (Number.isNaN(headshotRate)) {
+            headshotRate = 0;
+        }
+
         const text = 'STATUS\n\n' +
-            `PERFECT   : ${this.gameplayStatus.perfect}\n` +
-            `GREAT     : ${this.gameplayStatus.great}\n` +
-            `GOOD      : ${this.gameplayStatus.good}\n` +
-            `BAD       : ${this.gameplayStatus.bad}\n` +
-            `POOR      : ${this.gameplayStatus.poor}\n` +
-            // `AVG LAT   : ${this.gameplayStatus.offset}\n` +
+            `PERFECT: ${prependSpace(this.gameplayStatus.perfect)}\n` +
+            `GREAT: ${prependSpace(this.gameplayStatus.great)}\n` +
+            `GOOD: ${prependSpace(this.gameplayStatus.good)}\n` +
+            `BAD: ${prependSpace(this.gameplayStatus.bad)}\n` +
+            `POOR: ${prependSpace(this.gameplayStatus.poor)}\n` +
             '\n' +
-            `HEADSHOT  : ${this.gameplayStatus.headshot}\n` +
-            `MAX COMBO : ${this.gameplayStatus.maxcombo}\n`;
+            `HEADSHOT: ${prependSpace(`${this.gameplayStatus.headshot} (${Math.floor(headshotRate * 100)}%)`)}\n` +
+            `MAX COMBO: ${prependSpace(this.gameplayStatus.maxcombo)}\n\n` +
+            `L: ${this.gameplayStatus.late} | E: ${this.gameplayStatus.early} | ${(this.gameplayStatus.offset * 1000).toFixed(2)}ms`;
 
         Instance.EntFireAtName('maodie_judge_text', 'SetMessage', text);
+
+        const totalScore = this.chart.NoteDataList.length * 4;
+        const score = this.gameplayStatus.perfect * 3 +
+            this.gameplayStatus.great * 2 +
+            this.gameplayStatus.good * 1 +
+            this.gameplayStatus.headshot;
+        const percent = score / totalScore;
+        const rate = C.RATE_PRECENTS.find(v => v.percent <= percent)!.rate;
+
+        Instance.EntFireAtName("game_score", "SetMessage", score.toString());
+        Instance.EntFireAtName("game_rate", "SetMessage", rate);
+
+        const status: string[] = [];
+
+        if (this.gameplayStatus.headshot == this.gameplayStatus.poor +
+            this.gameplayStatus.bad +
+            this.gameplayStatus.good +
+            this.gameplayStatus.great +
+            this.gameplayStatus.perfect) {
+            status.push("ALL HEADSHOT");
+        }
+
+        if (this.gameplayStatus.bad == 0 && this.gameplayStatus.poor == 0) {
+            status.push('FULL COMBO');
+        }
+
+        Instance.EntFireAtName("game_indicator", "SetMessage", status.join('\n'));
     }
 
     updateMusic() {
