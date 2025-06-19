@@ -4,11 +4,8 @@ Layer0
 {
 	shader "csgo_complex.vfx"
 
-	//---- PBR ----
-	F_SELF_ILLUM 1
-
-	//---- Translucent ----
-	F_TRANSLUCENT 1
+	//---- 2-Sided Rendering ----
+	F_RENDER_BACKFACES 1
 
 	//---- Ambient Occlusion ----
 	TextureAmbientOcclusion "materials/default/default_ao.tga"
@@ -18,38 +15,26 @@ Layer0
 	g_flTexCoordRotation "0.000"
 	g_nScaleTexCoordUByModelScaleAxis "0" // None
 	g_nScaleTexCoordVByModelScaleAxis "0" // None
-	g_vColorTint "[1.000000 1.000000 1.000000 0.000000]"
+	g_vColorTint "[0.086275 0.086275 0.086275 0.000000]"
 	g_vTexCoordCenter "[0.500 0.500]"
 	g_vTexCoordOffset "[0.000 0.000]"
 	g_vTexCoordScale "[1.000 1.000]"
 	g_vTexCoordScrollSpeed "[0.000 0.000]"
-	TextureColor "materials/hachimi/button/next.png"
+	TextureColor "materials/default/default_color.tga"
 
 	//---- Fog ----
 	g_bFogEnabled "1"
 
 	//---- Lighting ----
 	g_flMetalness "0.000"
-	TextureRoughness "materials/default/default_rough.tga"
+	TextureRoughness "[0.313726 0.313726 0.313726 0.000000]"
 
 	//---- Normal Map ----
 	TextureNormal "materials/default/default_normal.tga"
 
-	//---- Self Illum ----
-	g_flSelfIllumAlbedoFactor "1.000"
-	g_flSelfIllumBrightness "2.000"
-	g_flSelfIllumScale "1.000"
-	g_vSelfIllumScrollSpeed "[0.000 0.000]"
-	g_vSelfIllumTint "[1.000000 1.000000 1.000000 0.000000]"
-	TextureSelfIllumMask "[1.000000 1.000000 1.000000 0.000000]"
-
 	//---- Texture Address Mode ----
 	g_nTextureAddressModeU "0" // Wrap
 	g_nTextureAddressModeV "0" // Wrap
-
-	//---- Translucent ----
-	g_flOpacityScale "1.000"
-	TextureTranslucency "materials/hachimi/button/mask.png"
 
 
 	VariableState
@@ -71,13 +56,7 @@ Layer0
 		"Normal Map"
 		{
 		}
-		"Self Illum"
-		{
-		}
 		"Texture Address Mode"
-		{
-		}
-		"Translucent"
 		{
 		}
 	}

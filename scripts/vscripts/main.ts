@@ -1,7 +1,7 @@
 /// <reference types="s2ts/types/cspointscript" />
 import { Instance } from "cspointscript"
 import { runServerCommand, game } from "s2ts/counter-strike"
-import { charts } from './musics';
+import { charts, Music } from './musics';
 import { HachimiGame } from "./hachimi";
 
 Instance.PublicMethod("HachimiInit", (suffix: string) => {
@@ -45,7 +45,7 @@ Instance.PublicMethod("HachimiTargetSpawned", (suffix: string) => {
 
 Instance.PublicMethod("HachimiMusicPrev", () => {
     const inst = HachimiGame.instance;
-    if (!inst || !inst.postInited) {
+    if (!inst || !inst.postInited || !inst.musicStopped) {
         return;
     }
 
@@ -60,7 +60,7 @@ Instance.PublicMethod("HachimiMusicPrev", () => {
 
 Instance.PublicMethod("HachimiMusicNext", () => {
     const inst = HachimiGame.instance;
-    if (!inst || !inst.postInited) {
+    if (!inst || !inst.postInited || !inst.musicStopped) {
         return;
     }
 
@@ -73,33 +73,22 @@ Instance.PublicMethod("HachimiMusicNext", () => {
     inst.updateMusic();
 });
 
+let trackTimeMod = 0;
+
 Instance.PublicMethod("HachimiGreenNumAdd", (numStr: string) => {
     const inst = HachimiGame.instance;
     if (!inst || !inst.postInited) {
         return;
     }
 
-    const num = parseFloat(numStr);
-    inst.trackTime += num;
-
-    if (inst.trackTime < 0.01) {
-        inst.trackTime = 0.01;
-    } else if (inst.trackTime > 5) {
-        inst.trackTime = 5;
-    }
-
-    const greenNumber = Math.floor((inst.trackTime * 1000 * 3) / 5);
-    Instance.EntFireAtName("maodie_green_num_text", "SetMessage", greenNumber.toString());
+    trackTimeMod = parseFloat(numStr);
 });
 
-let currentMusic = {
-    name: '',
-    charter: '',
-    sndEvent: '',
-    monitorBodygroup: 0,
-    barLines: [] as number[],
-    notes: [] as { LaneId: number, Time: number }[],
-};
+Instance.PublicMethod("HachimiGreenNumAddStop", () => {
+    trackTimeMod = 0;
+});
+
+let currentMusic: Music = null!;
 
 Instance.PublicMethod("Music_Begin", () => {
     currentMusic = {
@@ -107,8 +96,11 @@ Instance.PublicMethod("Music_Begin", () => {
         charter: '',
         sndEvent: '',
         monitorBodygroup: 0,
-        barLines: [],
-        notes: [],
+        sort: 99999999,
+        chart: {
+            BarLineList: [],
+            NoteDataList: [],
+        }
     };
 
     Instance.Msg("Clear currentMusic");
@@ -131,35 +123,30 @@ Instance.PublicMethod("Music_SetCover", (cover: string) => {
 });
 
 Instance.PublicMethod("Music_SetBarLines", (barLines: string) => {
-    currentMusic.barLines = JSON.parse(barLines);
+    currentMusic.chart.BarLineList = JSON.parse(barLines);
 });
 
 Instance.PublicMethod("Music_AddNote", (note: string) => {
     const [LaneId, Time] = JSON.parse(note) as number[];
 
-    currentMusic.notes.push({ LaneId, Time });
+    currentMusic.chart.NoteDataList.push({ LaneId, Time });
+});
+
+Instance.PublicMethod("Music_SetSort", (sort: number) => {
+    currentMusic.sort = sort;
 });
 
 Instance.PublicMethod("Music_End", () => {
-    const music = {
-        name: currentMusic.name,
-        charter: currentMusic.charter,
-        sndEvent: currentMusic.sndEvent,
-        monitorBodygroup: currentMusic.monitorBodygroup,
-        chart: {
-            BarLineList: currentMusic.barLines,
-            NoteDataList: currentMusic.notes,
-        }
-    }
+    Instance.Msg(`Add Music: ${currentMusic.name} ${currentMusic.charter}, Note count: ${currentMusic.chart.NoteDataList.length}`);
 
-    Instance.Msg(`Add Music: ${music.name} ${music.charter}, Note count: ${music.chart.NoteDataList.length}`);
-
-    const existingIndex = charts.findIndex(v => v.name == music.name && v.charter == music.charter);
+    const existingIndex = charts.findIndex(v => v.name == currentMusic.name && v.charter == currentMusic.charter);
     if (existingIndex > 0) {
-        charts[existingIndex] = music as any;
+        charts[existingIndex] = currentMusic;
     } else {
-        charts.push(music as any);
+        charts.push(currentMusic);
     }
+
+    charts.sort((a, b) => a.sort - b.sort);
 });
 
 Instance.PublicMethod("UpdateMusicUI", () => {
@@ -171,6 +158,15 @@ Instance.PublicMethod("UpdateMusicUI", () => {
     inst.updateMusic();
 });
 
+Instance.PublicMethod("StopMusic", () => {
+    const inst = HachimiGame.instance;
+    if (!inst || !inst.postInited || inst.musicStopped) {
+        return;
+    }
+
+    inst.stop();
+})
+
 game.onTick(() => {
     const inst = HachimiGame.instance;
     if (!inst || !inst.postInited) {
@@ -178,10 +174,46 @@ game.onTick(() => {
     }
 
     inst.onTick();
+
+    inst.trackTime += trackTimeMod;
+
+    if (inst.trackTime < 0.01) {
+        inst.trackTime = 0.01;
+    } else if (inst.trackTime > 5) {
+        inst.trackTime = 5;
+    }
+
+    const greenNumber = Math.floor((inst.trackTime * 1000 * 3) / 5);
+    Instance.EntFireAtName("maodie_green_num_text", "SetMessage", greenNumber.toString());
+});
+
+let lastCfgSuffix = 0;
+let maxCfgSuffix = 0;
+
+const loadNextPart = () => {
+    Instance.Msg("Loading music list part " + lastCfgSuffix);
+    runServerCommand("exec _m_" + lastCfgSuffix);
+
+    if (++lastCfgSuffix < maxCfgSuffix) {
+        game.runNextTick(loadNextPart);
+    } else {
+        Instance.Msg("Musics from cfg are all loaded");
+    }
+};
+
+Instance.PublicMethod("_LoadBuiltin", (n: number) => {
+    maxCfgSuffix = n;
+    lastCfgSuffix = 0;
+    game.runNextTick(loadNextPart);
+});
+
+game.runNextTick(() => {
+    runServerCommand("exec _builtin");
 });
 
 game.on('round_start', () => {
     HachimiGame.init();
+    Instance.EntFireAtName("stop_button", "Alpha", 0);
 });
 
 // simple timescale cheat detection

@@ -4,11 +4,11 @@ Layer0
 {
 	shader "csgo_complex.vfx"
 
+	//---- 2-Sided Rendering ----
+	F_RENDER_BACKFACES 1
+
 	//---- PBR ----
 	F_SELF_ILLUM 1
-
-	//---- Translucent ----
-	F_TRANSLUCENT 1
 
 	//---- Ambient Occlusion ----
 	TextureAmbientOcclusion "materials/default/default_ao.tga"
@@ -23,7 +23,7 @@ Layer0
 	g_vTexCoordOffset "[0.000 0.000]"
 	g_vTexCoordScale "[1.000 1.000]"
 	g_vTexCoordScrollSpeed "[0.000 0.000]"
-	TextureColor "materials/hachimi/button/next.png"
+	TextureColor "[0.686275 0.933333 0.933333 1.000000]"
 
 	//---- Fog ----
 	g_bFogEnabled "1"
@@ -37,7 +37,7 @@ Layer0
 
 	//---- Self Illum ----
 	g_flSelfIllumAlbedoFactor "1.000"
-	g_flSelfIllumBrightness "2.000"
+	g_flSelfIllumBrightness "3.000"
 	g_flSelfIllumScale "1.000"
 	g_vSelfIllumScrollSpeed "[0.000 0.000]"
 	g_vSelfIllumTint "[1.000000 1.000000 1.000000 0.000000]"
@@ -46,10 +46,6 @@ Layer0
 	//---- Texture Address Mode ----
 	g_nTextureAddressModeU "0" // Wrap
 	g_nTextureAddressModeV "0" // Wrap
-
-	//---- Translucent ----
-	g_flOpacityScale "1.000"
-	TextureTranslucency "materials/hachimi/button/mask.png"
 
 
 	VariableState
@@ -75,9 +71,6 @@ Layer0
 		{
 		}
 		"Texture Address Mode"
-		{
-		}
-		"Translucent"
 		{
 		}
 	}

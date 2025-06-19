@@ -256,10 +256,24 @@ export class HachimiGame {
         }
 
         if (this.lastNoteIndex >= notes.length) {
-            this.musicStopped = true;
-
-            Instance.EntFireAtName('maodie_start_text', 'SetMessage', "PRESS TO START");
+            this.stop();
         }
+    }
+
+    stop() {
+        if (this.musicStopped) {
+            return;
+        }
+
+        Instance.EntFireAtName("stop_button", "Alpha", 0);
+        Instance.EntFireAtName('maodie_start_text', 'SetMessage', "PRESS TO START");
+
+        Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
+        Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
+
+        runServerCommand("ent_fire logic_relay FireUser2");
+
+        this.musicStopped = true;
     }
 
     start() {
@@ -274,15 +288,11 @@ export class HachimiGame {
 
         Instance.EntFireAtName('maodie_start_text', 'SetMessage', "GET READY");
 
-        this.musicStopped = true;
-        Instance.EntFireAtName('maodie_sound_player', 'StopSound');
-        Instance.EntFireAtName('maodie_sound_player', 'Kill');
-
         const barTime = this.chart.BarLineList[1] - this.chart.BarLineList[0];
         const tickTime = barTime / 4;
         let blankTime = -(this.chart.BarLineList[0] - (barTime * 2));
 
-        while (blankTime < barTime * 2) {
+        while (blankTime < barTime * 2 || blankTime < this.trackTime + C.WAIT_TIME) {
             blankTime += barTime;
         }
 
@@ -312,6 +322,9 @@ export class HachimiGame {
             lastLaneNoteTimes[note.LaneId] = note.Time;
         }
 
+        Instance.EntFireAtName("fc_indicator", "Enable");
+        Instance.EntFireAtName("ah_indicator", "Enable");
+
         game.runNextTick(() => {
             createEntity({
                 class: 'point_soundevent',
@@ -337,6 +350,8 @@ export class HachimiGame {
             game.runAfterDelaySeconds(() => {
                 se.kill();
             }, blankTime);
+
+            Instance.EntFireAtName("stop_button", "Alpha", 255);
         });
     }
 
@@ -374,7 +389,15 @@ export class HachimiGame {
         const note = this.chart.NoteDataList[index];
         const lastNoteTime = this.lastNoteTimes.get(index);
 
-        if (lastNoteTime && lastNoteTime != -1) {
+        const offset = note.Time - this.time;
+
+        if (offset > C.POOR_RANGE) {
+            return;
+        }
+
+        const judgeDelta = Math.abs(offset);
+
+        if (judgeDelta > C.GREAT_RANGE && lastNoteTime && lastNoteTime != -1) {
             const minJudgeTime = lastNoteTime + (note.Time - lastNoteTime) / 2;
 
             if (this.time < minJudgeTime) {
@@ -382,15 +405,8 @@ export class HachimiGame {
             }
         }
 
-        if (this.time < note.Time - C.POOR_RANGE) {
-            return;
-        }
-
         this.lastNoteTimes[note.LaneId] = note.Time;
 
-        const offset = note.Time - this.time;
-
-        const judgeDelta = Math.abs(offset);
         const judgement = (() => {
             if (judgeDelta < C.PGREAT_RANGE) {
                 this.gameplayStatus.perfect++;
@@ -500,10 +516,16 @@ export class HachimiGame {
             this.gameplayStatus.great +
             this.gameplayStatus.perfect) {
             status.push("ALL HEADSHOT");
+            Instance.EntFireAtName("ah_indicator", "Enable");
+        } else {
+            Instance.EntFireAtName("ah_indicator", "Disable");
         }
 
         if (this.gameplayStatus.bad == 0 && this.gameplayStatus.poor == 0) {
             status.push('FULL COMBO');
+            Instance.EntFireAtName("fc_indicator", "Enable");
+        } else {
+            Instance.EntFireAtName("fc_indicator", "Disable");
         }
 
         Instance.EntFireAtName("game_indicator", "SetMessage", status.join('\n'));

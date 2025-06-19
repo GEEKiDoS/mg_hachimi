@@ -32,6 +32,14 @@
 		vsnd_files = "sounds/songs/haxuedamaoxian.vsnd"
 	}
 
+	"music.eraby_e_connec_10n_otto" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/eraby_e_connec_10n_otto.vsnd"
+	}
+
 	"effect.maodie_ha" =
 	{
 		type = "csgo_music"
