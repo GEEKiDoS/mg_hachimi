@@ -127,7 +127,6 @@ export class HachimiGame {
     postInit() {
         this.postInited = true;
 
-        this.lastTime = Instance.GetGameTime();
         Instance.Msg("PostInit: template suffix: " + this.templateSuffix);
         runServerCommand("say Ready");
 
@@ -167,6 +166,10 @@ export class HachimiGame {
         HachimiGame.lastTemplateSuffix = this.templateSuffix;
 
         game.runAfterDelayTicks(() => {
+            if (this.musicStopped) {
+                return;
+            }
+
             addOutputByName('target_maodie_hit_head_' + suffix, {
                 outputName: 'OnHealthChanged',
                 targetName: 's2ts-script',
@@ -192,29 +195,42 @@ export class HachimiGame {
         this.suffixToNoteIndexMap.set(suffix, noteIndex);
 
         const judgeDelay = noteTime - this.time;
-        // Instance.Msg(judgeDelay);
 
         game.runAfterDelaySeconds(() => {
+            if (this.musicStopped) {
+                return;
+            }
+
             Instance.EntFireAtName('maodie_relay_' + suffix, 'FireUser1');
         }, judgeDelay - this.trackTime - C.WAIT_TIME);
 
         game.runAfterDelaySeconds(() => {
+            if (this.musicStopped) {
+                return;
+            }
+
             Instance.EntFireAtName('maodie_moving_' + suffix, 'SetMaxSpeed', this.speed);
             Instance.EntFireAtName('maodie_moving_' + suffix, 'SetSpeedReal', this.speed);
             Instance.EntFireAtName('maodie_moving_' + suffix, 'MoveToPathNode', 'maodie_track_end_' + suffix);
         }, judgeDelay - this.trackTime);
 
         game.runAfterDelaySeconds(() => {
+            if (this.musicStopped) {
+                return;
+            }
+
             Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,1');
         }, judgeDelay - C.GOOD_RANGE);
 
         game.runAfterDelaySeconds(() => {
+            if (this.musicStopped) {
+                return;
+            }
+
             if (!this.suffixToNoteIndexMap.has(suffix)) {
                 return;
             }
-        }, judgeDelay);
 
-        game.runAfterDelaySeconds(() => {
             this.onTargetKilled(suffix, 2);
         }, judgeDelay + C.POOR_RANGE);
     }
@@ -227,14 +243,7 @@ export class HachimiGame {
             return;
         }
 
-        const now = Instance.GetGameTime();
-        const delta = this.lastTime - now;
-        this.lastTime = now;
-
         const musicTime = this.time;
-
-        // Instance.Msg(musicTime);
-
         const notes = this.chart.NoteDataList;
 
         if (musicTime > 0 && !this.musicStarted) {
@@ -256,11 +265,11 @@ export class HachimiGame {
         }
 
         if (this.lastNoteIndex >= notes.length) {
-            this.stop();
+            this.stop(true);
         }
     }
 
-    stop() {
+    stop(dontKill: boolean = false) {
         if (this.musicStopped) {
             return;
         }
@@ -268,10 +277,12 @@ export class HachimiGame {
         Instance.EntFireAtName("stop_button", "Alpha", 0);
         Instance.EntFireAtName('maodie_start_text', 'SetMessage', "PRESS TO START");
 
-        Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
-        Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
-
-        runServerCommand("ent_fire logic_relay FireUser2");
+        if (!dontKill) {
+            runServerCommand("ent_fire logic_relay FireUser2");
+            runServerCommand("ent_fire func_tracktrain Stop");
+            Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
+            Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
+        }
 
         this.musicStopped = true;
     }
@@ -286,6 +297,8 @@ export class HachimiGame {
             return;
         }
 
+        Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
+        Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
         Instance.EntFireAtName('maodie_start_text', 'SetMessage', "GET READY");
 
         const barTime = this.chart.BarLineList[1] - this.chart.BarLineList[0];
@@ -343,6 +356,10 @@ export class HachimiGame {
 
             for (let i = 1; i <= 4; i++) {
                 game.runAfterDelaySeconds(() => {
+                    if (this.musicStopped) {
+                        return;
+                    }
+                    
                     se.play();
                 }, blankTime - (tickTime * i));
             }

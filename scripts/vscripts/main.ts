@@ -249,3 +249,4 @@ runServerCommand("mp_maxmoney 65535");
 runServerCommand("mp_startmoney 65535");
 runServerCommand("mp_buytime 65535");
 runServerCommand("weapon_accuracy_nospread 1");
+runServerCommand("vis_enable 0");
