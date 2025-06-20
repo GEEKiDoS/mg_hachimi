@@ -40,6 +40,22 @@
 		vsnd_files = "sounds/songs/eraby_e_connec_10n_otto.vsnd"
 	}
 
+	"music.jumping_hachimi" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/jumping_hachimi.vsnd"
+	}
+
+	"music.hachimi_proi_proi" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/hachimi_proi_proi.vsnd"
+	}
+
 	"effect.maodie_ha" =
 	{
 		type = "csgo_music"

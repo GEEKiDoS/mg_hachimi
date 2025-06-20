@@ -54,6 +54,7 @@ export class HachimiGame {
     lastNoteIndex = 0;
     musicStarted = false;
     musicStopped = true;
+    hardStopped = false;
 
     gameplayStatus = {
         perfect: 0,
@@ -166,7 +167,7 @@ export class HachimiGame {
         HachimiGame.lastTemplateSuffix = this.templateSuffix;
 
         game.runAfterDelayTicks(() => {
-            if (this.musicStopped) {
+            if (this.hardStopped) {
                 return;
             }
 
@@ -197,7 +198,7 @@ export class HachimiGame {
         const judgeDelay = noteTime - this.time;
 
         game.runAfterDelaySeconds(() => {
-            if (this.musicStopped) {
+            if (this.hardStopped) {
                 return;
             }
 
@@ -205,7 +206,7 @@ export class HachimiGame {
         }, judgeDelay - this.trackTime - C.WAIT_TIME);
 
         game.runAfterDelaySeconds(() => {
-            if (this.musicStopped) {
+            if (this.hardStopped) {
                 return;
             }
 
@@ -215,7 +216,7 @@ export class HachimiGame {
         }, judgeDelay - this.trackTime);
 
         game.runAfterDelaySeconds(() => {
-            if (this.musicStopped) {
+            if (this.hardStopped) {
                 return;
             }
 
@@ -223,7 +224,7 @@ export class HachimiGame {
         }, judgeDelay - C.GOOD_RANGE);
 
         game.runAfterDelaySeconds(() => {
-            if (this.musicStopped) {
+            if (this.hardStopped) {
                 return;
             }
 
@@ -269,7 +270,7 @@ export class HachimiGame {
         }
     }
 
-    stop(dontKill: boolean = false) {
+    stop(soft: boolean = false) {
         if (this.musicStopped) {
             return;
         }
@@ -277,11 +278,13 @@ export class HachimiGame {
         Instance.EntFireAtName("stop_button", "Alpha", 0);
         Instance.EntFireAtName('maodie_start_text', 'SetMessage', "PRESS TO START");
 
-        if (!dontKill) {
+        if (!soft) {
             runServerCommand("ent_fire logic_relay FireUser2");
             runServerCommand("ent_fire func_tracktrain Stop");
             Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
             Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
+
+            this.hardStopped = true;
         }
 
         this.musicStopped = true;
@@ -350,13 +353,14 @@ export class HachimiGame {
             this.musicStartTime = Instance.GetGameTime() + blankTime;
             this.musicStopped = false;
             this.musicStarted = false;
+            this.hardStopped = false;
             this.lastNoteIndex = 0;
 
             const se = createSoundEvent('effect.maodie_ha');
 
             for (let i = 1; i <= 4; i++) {
                 game.runAfterDelaySeconds(() => {
-                    if (this.musicStopped) {
+                    if (this.hardStopped) {
                         return;
                     }
                     

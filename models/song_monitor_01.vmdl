@@ -137,6 +137,66 @@
 							exception_list = [  ]
 						}
 					},
+					{
+						_class = "RenderMeshFile"
+						name = "jumping_hachimi"
+						children = 
+						[
+							{
+								_class = "ReplaceMeshMaterials"
+								remaps = 
+								[
+									{
+										from = "materials/covers/manbo_manbo_sometimes_hachimi.vmat"
+										to = "materials/covers/jumping_hachimi.vmat"
+									},
+									{
+										from = "models/generic/retro_monitor_01/retro_monitor_01_clean.vmat"
+										to = "models/generic/retro_monitor_01/retro_monitor_01_clean.vmat"
+									},
+								]
+								use_single_material = false
+								single_override_material = ""
+							},
+						]
+						filename = "models\\fbx\\mesh\\song_monitor_01.fbx"
+						import_scale = 1.0
+						import_filter = 
+						{
+							exclude_by_default = false
+							exception_list = [  ]
+						}
+					},
+					{
+						_class = "RenderMeshFile"
+						name = "hachimi_proi_proi"
+						children = 
+						[
+							{
+								_class = "ReplaceMeshMaterials"
+								remaps = 
+								[
+									{
+										from = "materials/covers/manbo_manbo_sometimes_hachimi.vmat"
+										to = "materials/covers/hachimi_proi_proi.vmat"
+									},
+									{
+										from = "models/generic/retro_monitor_01/retro_monitor_01_clean.vmat"
+										to = "models/generic/retro_monitor_01/retro_monitor_01_clean.vmat"
+									},
+								]
+								use_single_material = false
+								single_override_material = ""
+							},
+						]
+						filename = "models\\fbx\\mesh\\song_monitor_01.fbx"
+						import_scale = 1.0
+						import_filter = 
+						{
+							exclude_by_default = false
+							exception_list = [  ]
+						}
+					},
 				]
 			},
 			{
@@ -181,6 +241,20 @@
 								meshes = 
 								[
 									"eraby_e_connec_10n_otto",
+								]
+							},
+							{
+								_class = "BodyGroupChoice"
+								meshes = 
+								[
+									"hachimi_proi_proi",
+								]
+							},
+							{
+								_class = "BodyGroupChoice"
+								meshes = 
+								[
+									"jumping_hachimi",
 								]
 							},
 						]
