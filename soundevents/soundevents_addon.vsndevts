@@ -80,6 +80,14 @@
 		vsnd_files = "sounds/songs/miracle_5ympho_x.vsnd"
 	}
 
+	"music.hachi_midnight_city" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/hachi_midnight_city.vsnd"
+	}
+
 	"effect.maodie_ha" =
 	{
 		type = "csgo_music"
