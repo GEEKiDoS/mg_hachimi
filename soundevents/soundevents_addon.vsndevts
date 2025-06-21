@@ -123,6 +123,13 @@
 	{
 		type = "csgo_music"
 		use_hrtf = 0.0
-		vsnd_files = "sounds/hitmarker_2.vsnd"
+		vsnd_files = "sounds/hitmarker.vsnd"
+	}
+
+	"effect.hitmarker_headshot" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		vsnd_files = "sounds/hitmarker_headshot.vsnd"
 	}
 }

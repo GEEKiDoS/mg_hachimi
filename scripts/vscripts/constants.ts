@@ -12,6 +12,7 @@ const PGREAT_RANGE = 0.0333;
 
 const JUDGE_TO_TEXT = ['PERFECT', 'GREAT', 'GOOD', 'BAD', 'POOR', 'UNKNOWN'];
 const LOC_TO_TEXT = ['HEAD', 'BODY'];
+const OPTION_TO_TEXT = [undefined, 'MIRROR', 'RANDOM', 'R-RANDOM', 'S-RANDOM'];
 
 const WAIT_TIME = 0.25;
 
@@ -29,5 +30,13 @@ const RATE_PRECENTS = [
 export const C = {
     END_POINT, DELTA, TRACK_LENGTH, JUDGE_LINE,
     POOR_RANGE, BAD_RANGE, GOOD_RANGE, GREAT_RANGE, PGREAT_RANGE,
-    JUDGE_TO_TEXT, LOC_TO_TEXT, WAIT_TIME, RATE_PRECENTS
+    JUDGE_TO_TEXT, LOC_TO_TEXT, WAIT_TIME, RATE_PRECENTS, OPTION_TO_TEXT
 };
+
+export enum Opt {
+    Off = 0,
+    Mirror = 1,
+    Random = 2,
+    R_Random = 3,
+    S_Random = 4,
+}

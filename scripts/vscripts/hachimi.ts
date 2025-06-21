@@ -1,10 +1,11 @@
 /// <reference types="s2ts/types/cspointscript" />
 import { Instance } from "cspointscript"
 import { runServerCommand, game, addOutputByName, createEntity, uniqueId, Vector } from "s2ts/counter-strike"
-import { charts } from './musics';
-import { C } from "./constants";
+import { Chart, charts } from './musics';
+import { C, Opt } from "./constants";
 import { SoundEffect, createSoundEvent } from "./sound";
 import { JudgeTipController } from "./judge_tip_controller";
+import { HitmarkerController } from "./hitmarker_controller";
 
 function prependSpace(value: { toString: () => string }, count: number = 12) {
     return value.toString().padStart(count, ' ');
@@ -27,8 +28,67 @@ export class HachimiGame {
         return charts[this.musicIndex];
     }
 
+    option: Opt = Opt.Off;
+
+    _lastMusicIndex = -1;
+    _lastOption: Opt = Opt.Off;
+    _moddedChart: Chart | undefined;
+
     get chart() {
-        return this.music.chart;
+        if (!this.option) {
+            return this.music.chart;
+        }
+
+        if (this._lastMusicIndex == this.musicIndex &&
+            this._lastOption == this.option &&
+            this._moddedChart
+        ) {
+            return this._moddedChart;
+        }
+
+        this._moddedChart = JSON.parse(JSON.stringify(this.music.chart)) as Chart;
+        this._lastMusicIndex = this.musicIndex;
+        this._lastOption = this.option;
+
+        const notes = this._moddedChart.NoteDataList;
+
+        if (this.option < Opt.S_Random) {
+            let laneMap: number[] = [0, 1, 2, 3, 4, 5, 6];
+
+            if (this.option == Opt.Mirror) {
+                laneMap.reverse();
+            } else if (this.option == Opt.Random) {
+                let i = 7;
+                while (i > 0) {
+                    const j = Math.floor(Math.random() * i);
+                    i--;
+
+                    [laneMap[i], laneMap[j]] = [laneMap[j], laneMap[i]];
+                }
+            } else if (this.option == Opt.R_Random) {
+                const shift = 1 + Math.floor(Math.random() * 6);
+
+                for (let i = 0; i < shift; i++) {
+                    laneMap.push(laneMap.shift()!)
+                }
+            }
+
+            for (const note of notes) {
+                note.LaneId = laneMap[note.LaneId];
+            }
+
+            runServerCommand("say \"" + C.OPTION_TO_TEXT[this.option] + ": " + [0, 1, 2, 3, 4, 5, 6]
+                .map(v => laneMap[v] + 1)
+                .join('') + "\""
+            );
+        } else if (this.option == Opt.S_Random) {
+            for (const note of notes) {
+                note.LaneId = Math.floor(Math.random() * 7);
+            }
+        }
+
+        runServerCommand("say Applyed " + C.OPTION_TO_TEXT[this.option]);
+        return this._moddedChart;
     }
 
     get musicName() {
@@ -73,9 +133,13 @@ export class HachimiGame {
 
     judgeTipControllers: JudgeTipController[] = [];
 
-    hitmarkerEffect: SoundEffect;
     combobreakEffect: SoundEffect;
     comboEffects: SoundEffect[];
+
+    hitmarkerEffect: SoundEffect;
+    headshotHitmarkerEffect: SoundEffect;
+    hitmarkerController: HitmarkerController = new HitmarkerController("hitmarker_particle");
+    headshotHitmarkerController: HitmarkerController = new HitmarkerController("hitmarker_particle_headshot");
 
     constructor() {
         game.runNextTick(() => {
@@ -142,6 +206,7 @@ export class HachimiGame {
         });
 
         this.hitmarkerEffect = createSoundEvent('effect.hitmarker');
+        this.headshotHitmarkerEffect = createSoundEvent('effect.hitmarker_headshot');
         this.combobreakEffect = createSoundEvent('effect.siren_laugh');
         this.comboEffects = ['effect.wow', 'effect.manbo', 'effect.oye'].map(v => createSoundEvent(v));
 
@@ -239,6 +304,8 @@ export class HachimiGame {
     onTick() {
         this.processKilledTargets();
         this.judgeTipControllers.forEach(v => v.onTick());
+        this.hitmarkerController.onTick();
+        this.headshotHitmarkerController.onTick();
 
         if (!this.postInited || this.musicStopped) {
             return;
@@ -300,6 +367,7 @@ export class HachimiGame {
             return;
         }
 
+        runServerCommand("ent_fire logic_relay FireUser2");
         Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
         Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
         Instance.EntFireAtName('maodie_start_text', 'SetMessage', "GET READY");
@@ -327,7 +395,6 @@ export class HachimiGame {
             early: 0,
         };
 
-        this.updateText();
         this.chart.NoteDataList = this.chart.NoteDataList.sort((a, b) => a.Time - b.Time);
 
         this.lastNoteTimes.clear();
@@ -356,6 +423,8 @@ export class HachimiGame {
             this.hardStopped = false;
             this.lastNoteIndex = 0;
 
+            this.updateText();
+
             const se = createSoundEvent('effect.maodie_ha');
 
             for (let i = 1; i <= 4; i++) {
@@ -363,7 +432,7 @@ export class HachimiGame {
                     if (this.hardStopped) {
                         return;
                     }
-                    
+
                     se.play();
                 }, blankTime - (tickTime * i));
             }
@@ -466,7 +535,14 @@ export class HachimiGame {
         }
 
         if (judgement <= 2) {
-            this.hitmarkerEffect.play();
+            if (where == 0) {
+                this.headshotHitmarkerController.show();
+                this.headshotHitmarkerEffect.play();
+            } else {
+                this.hitmarkerController.show();
+                this.hitmarkerEffect.play();
+            }
+
             this.gameplayStatus.combo++;
 
             if (this.gameplayStatus.combo > this.gameplayStatus.maxcombo) {
@@ -527,6 +603,7 @@ export class HachimiGame {
         const rate = C.RATE_PRECENTS.find(v => v.percent <= percent)!.rate;
 
         Instance.EntFireAtName("game_score", "SetMessage", score.toString());
+        Instance.EntFireAtName("game_score_percent", "SetMessage", (percent * 100).toFixed(2) + '%');
         Instance.EntFireAtName("game_rate", "SetMessage", rate);
 
         const status: string[] = [];
@@ -549,7 +626,19 @@ export class HachimiGame {
             Instance.EntFireAtName("fc_indicator", "Disable");
         }
 
+        const optionText = C.OPTION_TO_TEXT[this.option];
+        if (optionText) {
+            status.push('USE OPTION: ' + optionText);
+        }
+
         Instance.EntFireAtName("game_indicator", "SetMessage", status.join('\n'));
+
+        const progress = (this.lastNoteIndex - this.suffixToNoteIndexMap.size) / this.chart.NoteDataList.length;
+        const progressText = new Array(Math.round(progress * 64))
+            .fill('█')
+            .join('');
+
+        Instance.EntFireAtName("game_progress", "SetMessage", progressText);
     }
 
     updateMusic() {

@@ -3,6 +3,7 @@ import { Instance } from "cspointscript"
 import { runServerCommand, game } from "s2ts/counter-strike"
 import { charts, Music } from './musics';
 import { HachimiGame } from "./hachimi";
+import { C, Opt } from "./constants";
 
 Instance.PublicMethod("HachimiInit", (suffix: string) => {
     const inst = HachimiGame.instance;
@@ -165,7 +166,22 @@ Instance.PublicMethod("StopMusic", () => {
     }
 
     inst.stop();
-})
+});
+
+Instance.PublicMethod("ToggleOption", () => {
+    const inst = HachimiGame.instance;
+    if (!inst || !inst.postInited || !inst.musicStopped) {
+        return;
+    }
+
+    if (inst.option + 1 > Opt.S_Random) {
+        inst.option = Opt.Off;
+    } else {
+        inst.option = inst.option + 1;
+    }
+
+    Instance.EntFireAtName("option_display", "SetMessage", C.OPTION_TO_TEXT[inst.option] ?? 'OFF');
+});
 
 game.onTick(() => {
     const inst = HachimiGame.instance;

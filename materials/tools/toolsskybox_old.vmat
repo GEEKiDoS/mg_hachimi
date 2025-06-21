@@ -25,7 +25,6 @@ Layer0
 	{
 		mapbuilder.nodraw "1"
 		mapbuilder.sky "1"
-		mapbuilder.visblocker "1"
 		mapbuilder.playerclip "1"
 		tools.toolsmaterial "1"
 	}
