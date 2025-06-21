@@ -353,7 +353,8 @@ export class HachimiGame {
 
             this.hardStopped = true;
         }
-
+        
+        this._moddedChart = undefined;
         this.musicStopped = true;
     }
 
