@@ -1,0 +1,86 @@
+// THIS FILE IS AUTO-GENERATED
+
+Layer0
+{
+	shader "csgo_simple_3layer_parallax.vfx"
+
+	//---- Ambient Occlusion ----
+	TextureAmbientOcclusion "materials/default/default_ao.tga"
+
+	//---- Color ----
+	g_vColorTint "[1.000000 1.000000 1.000000 0.000000]"
+	g_vTexCoordScrollSpeed "[0.000 0.000]"
+	TextureColor "materials/default/default_color.tga"
+
+	//---- Fog ----
+	g_bFogEnabled "1"
+
+	//---- Layer 0 ----
+	TextureLayer0Mask "[0.000000 0.000000 0.000000 0.000000]"
+
+	//---- Layer 1 ----
+	g_flLayer1EmissiveLevel "0.596"
+	g_flLayer1Offset "-100.000"
+	g_vLayer1EmissiveTint "[1.000000 1.000000 1.000000 0.000000]"
+	TextureLayer1Color "materials/covers/hachi_midnight_city.jpg"
+	TextureLayer1Mask "[1.000000 1.000000 1.000000 0.000000]"
+
+	//---- Layer 2 ----
+	g_flLayer2EmissiveLevel "0.000"
+	g_flLayer2Offset "-1000.000"
+	g_vLayer2EmissiveTint "[1.000000 1.000000 1.000000 0.000000]"
+	TextureLayer2Color "[0.000000 0.000000 0.000000 0.000000]"
+
+	//---- Lighting ----
+	g_flMetalness "0.000"
+	TextureRoughness "materials/default/default_rough.tga"
+
+	//---- Normal Map ----
+	TextureNormal "materials/default/default_normal.tga"
+
+	//---- Texture Address Mode ----
+	g_nTextureAddressModeU "3" // Border
+	g_nTextureAddressModeV "3" // Border
+
+	UnusedVariables
+	{
+		"g_bUseSecondaryUvForAmbientOcclusion" "1"
+		"g_bUseSecondaryUvForLayer1" "0"
+		"g_bUseSecondaryUvForLayer2" "1"
+		"TextureMetalness" ""
+	}
+
+
+	VariableState
+	{
+		"Ambient Occlusion"
+		{
+		}
+		"Color"
+		{
+		}
+		"Fog"
+		{
+		}
+		"Layer 0"
+		{
+		}
+		"Layer 1"
+		{
+		}
+		"Layer 2"
+		{
+		}
+		"Lighting"
+		{
+			"Roughness" 0
+			"Metalness" 0
+		}
+		"Normal Map"
+		{
+		}
+		"Texture Address Mode"
+		{
+		}
+	}
+}
