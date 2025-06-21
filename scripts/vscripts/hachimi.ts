@@ -353,8 +353,7 @@ export class HachimiGame {
 
             this.hardStopped = true;
         }
-        
-        this._moddedChart = undefined;
+
         this.musicStopped = true;
     }
 
@@ -372,6 +371,8 @@ export class HachimiGame {
         Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
         Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
         Instance.EntFireAtName('maodie_start_text', 'SetMessage', "GET READY");
+
+        this._moddedChart = undefined;
 
         const barTime = this.chart.BarLineList[1] - this.chart.BarLineList[0];
         const tickTime = barTime / 4;
