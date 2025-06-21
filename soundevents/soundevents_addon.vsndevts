@@ -56,6 +56,30 @@
 		vsnd_files = "sounds/songs/hachimi_proi_proi.vsnd"
 	}
 
+	"music.more_jump_more" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/more_jump_more.vsnd"
+	}
+
+	"music.dashchimi" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/dashchimi.vsnd"
+	}
+
+	"music.miracle_5ympho_x" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/miracle_5ympho_x.vsnd"
+	}
+
 	"effect.maodie_ha" =
 	{
 		type = "csgo_music"
@@ -122,6 +146,7 @@
 	"effect.hitmarker" =
 	{
 		type = "csgo_music"
+		volume = 0.6
 		use_hrtf = 0.0
 		vsnd_files = "sounds/hitmarker.vsnd"
 	}
@@ -129,6 +154,7 @@
 	"effect.hitmarker_headshot" =
 	{
 		type = "csgo_music"
+		volume = 0.6
 		use_hrtf = 0.0
 		vsnd_files = "sounds/hitmarker_headshot.vsnd"
 	}
