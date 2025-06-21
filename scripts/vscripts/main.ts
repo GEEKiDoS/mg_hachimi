@@ -191,6 +191,10 @@ game.onTick(() => {
 
     inst.onTick();
 
+    if (!trackTimeMod) {
+        return;
+    }
+
     inst.trackTime += trackTimeMod;
 
     if (inst.trackTime < 0.01) {

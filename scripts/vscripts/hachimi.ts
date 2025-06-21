@@ -34,19 +34,13 @@ export class HachimiGame {
     _lastOption: Opt = Opt.Off;
     _moddedChart: Chart | undefined;
 
-    get chart() {
-        if (!this.option) {
-            return this.music.chart;
-        }
-
-        if (this._lastMusicIndex == this.musicIndex &&
-            this._lastOption == this.option &&
-            this._moddedChart
-        ) {
-            return this._moddedChart;
-        }
-
+    applyChartOptions() {
         this._moddedChart = JSON.parse(JSON.stringify(this.music.chart)) as Chart;
+
+        if (!this.option) {
+            return;
+        }
+
         this._lastMusicIndex = this.musicIndex;
         this._lastOption = this.option;
 
@@ -88,6 +82,13 @@ export class HachimiGame {
         }
 
         runServerCommand("say Applyed " + C.OPTION_TO_TEXT[this.option]);
+    }
+
+    get chart() {
+        if (!this._moddedChart) {
+            throw new Error("using chart before apply options.");
+        }
+
         return this._moddedChart;
     }
 
@@ -367,12 +368,13 @@ export class HachimiGame {
             return;
         }
 
+        this.suffixToNoteIndexMap.clear();
+        this.applyChartOptions();
+
         runServerCommand("ent_fire logic_relay FireUser2");
         Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
         Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
         Instance.EntFireAtName('maodie_start_text', 'SetMessage', "GET READY");
-
-        this._moddedChart = undefined;
 
         const barTime = this.chart.BarLineList[1] - this.chart.BarLineList[0];
         const tickTime = barTime / 4;
@@ -596,7 +598,7 @@ export class HachimiGame {
 
         Instance.EntFireAtName('maodie_judge_text', 'SetMessage', text);
 
-        const totalScore = this.chart.NoteDataList.length * 4;
+        const totalScore = this.music.chart.NoteDataList.length * 4;
         const score = this.gameplayStatus.perfect * 3 +
             this.gameplayStatus.great * 2 +
             this.gameplayStatus.good * 1 +
@@ -635,7 +637,7 @@ export class HachimiGame {
 
         Instance.EntFireAtName("game_indicator", "SetMessage", status.join('\n'));
 
-        const progress = (this.lastNoteIndex - this.suffixToNoteIndexMap.size) / this.chart.NoteDataList.length;
+        const progress = (this.lastNoteIndex - this.suffixToNoteIndexMap.size) / this.music.chart.NoteDataList.length;
         const progressText = new Array(Math.round(progress * 64))
             .fill('█')
             .join('');
