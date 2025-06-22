@@ -638,11 +638,22 @@ export class HachimiGame {
         Instance.EntFireAtName("game_indicator", "SetMessage", status.join('\n'));
 
         const progress = (this.lastNoteIndex - this.suffixToNoteIndexMap.size) / this.music.chart.NoteDataList.length;
-        const progressText = new Array(Math.round(progress * 64))
+        const progressText = new Array(Math.floor(progress * 64))
             .fill('█')
             .join('');
 
-        Instance.EntFireAtName("game_progress", "SetMessage", progressText);
+        const progressLast = (p => {
+            if (p >= 0.875) return '▉';
+            if (p >= 0.75) return '▊';
+            if (p >= 0.625) return '▋';
+            if (p >= 0.5) return '▌';
+            if (p >= 0.375) return '▍';
+            if (p >= 0.25) return '▎';
+            if (p >= 0.125) return '▏';
+            return '';
+        })(progress * 64 - progressText.length);
+
+        Instance.EntFireAtName("game_progress", "SetMessage", progressText + progressLast);
     }
 
     updateMusic() {
