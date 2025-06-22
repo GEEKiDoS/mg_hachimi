@@ -6,12 +6,18 @@
 		children = 
 		[
 			{
+				_class = "BoneMarkupList"
+				bone_cull_type = "None"
+				primary_root_bone = ""
+			},
+			{
 				_class = "RenderMeshList"
 				children = 
 				[
 					{
 						_class = "RenderMeshFile"
-						filename = "models\\fbx\\mesh\\hachimi_shelf.fbx"
+						name = "hachimi_soccer_ball"
+						filename = "models/fbx/mesh/hachimi_soccer_ball.fbx"
 						import_scale = 1.0
 						import_filter = 
 						{
@@ -22,18 +28,34 @@
 				]
 			},
 			{
+				_class = "GameDataList"
+				children = 
+				[
+					{
+						_class = "GenericGameData"
+						game_class = "ao_proxy_capsule"
+						game_keys = 
+						{
+							bonename = null
+							radius = 9.01635
+							point0 = [ 0.0, 0.0, 0.0 ]
+							point1 = [ 0.0, 0.0, 0.0 ]
+						}
+					},
+				]
+			},
+			{
 				_class = "PhysicsShapeList"
 				children = 
 				[
 					{
-						_class = "PhysicsShapeBox"
+						_class = "PhysicsShapeSphere"
 						parent_bone = ""
-						surface_prop = "default"
+						surface_prop = "soccerball"
 						collision_prop = "default"
 						tool_material = ""
-						origin = [ -6.966176, 1.046142, 0.115849 ]
-						angles = [ 0.0, 0.0, 0.0 ]
-						dimensions = [ 15.902114, 66.02037, 63.549164 ]
+						radius = 7.9
+						center = [ 0.0, 0.0, 0.0 ]
 					},
 				]
 				leave_body_collision_unmodified = false
