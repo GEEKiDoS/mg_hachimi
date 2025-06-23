@@ -88,6 +88,30 @@
 		vsnd_files = "sounds/songs/hachi_midnight_city.vsnd"
 	}
 
+	"music.hachimi_overdose" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/hachimi_overdose.vsnd"
+	}
+
+	"music.halian" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/halian.vsnd"
+	}
+
+	"music.incat" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/incat.vsnd"
+	}
+
 	"effect.maodie_ha" =
 	{
 		type = "csgo_music"
