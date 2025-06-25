@@ -4,15 +4,30 @@ const DELTA = START_POINT.map((v, i) => v - END_POINT[i]);
 const TRACK_LENGTH = Math.sqrt(DELTA[0] * DELTA[0] + DELTA[1] * DELTA[1]);
 const JUDGE_LINE = 128;
 
-const POOR_RANGE = 0.2;
-const BAD_RANGE = 0.1166;
-const GOOD_RANGE = 0.0833;
-const GREAT_RANGE = 0.0667;
-const PGREAT_RANGE = 0.0333;
+// const POOR_RANGE = 0.2;
+// const BAD_RANGE = 0.1166;
+// const GOOD_RANGE = 0.0833;
+// const GREAT_RANGE = 0.0667;
+// const PGREAT_RANGE = 0.0333;
+
+const JUDGE_RANGE_SETS = [{
+    POOR: 0.2,
+    BAD: 0.1166,
+    GOOD: 0.0833,
+    GREAT: 0.0667,
+    PGREAT: 0.0333,
+}, {
+    POOR: 0.2,
+    BAD: 0.17,
+    GOOD: 0.0833 * 2,
+    GREAT: 0.0667 * 2,
+    PGREAT: 0.0333 * 2,
+}];
 
 const JUDGE_TO_TEXT = ['PERFECT', 'GREAT', 'GOOD', 'BAD', 'POOR', 'UNKNOWN'];
 const LOC_TO_TEXT = ['HEAD', 'BODY'];
 const OPTION_TO_TEXT = [undefined, 'MIRROR', 'RANDOM', 'R-RANDOM', 'S-RANDOM'];
+const JUDGE_OPTION_TO_TEXT = [undefined, 'EASY'];
 
 const WAIT_TIME = 0.25;
 
@@ -29,8 +44,10 @@ const RATE_PRECENTS = [
 
 export const C = {
     END_POINT, DELTA, TRACK_LENGTH, JUDGE_LINE,
-    POOR_RANGE, BAD_RANGE, GOOD_RANGE, GREAT_RANGE, PGREAT_RANGE,
-    JUDGE_TO_TEXT, LOC_TO_TEXT, WAIT_TIME, RATE_PRECENTS, OPTION_TO_TEXT
+    // POOR_RANGE, BAD_RANGE, GOOD_RANGE, GREAT_RANGE, PGREAT_RANGE,
+    JUDGE_RANGE_SETS,
+    LOC_TO_TEXT, WAIT_TIME, RATE_PRECENTS, 
+    JUDGE_TO_TEXT, OPTION_TO_TEXT, JUDGE_OPTION_TO_TEXT
 };
 
 export enum Opt {
@@ -39,4 +56,9 @@ export enum Opt {
     Random = 2,
     R_Random = 3,
     S_Random = 4,
+}
+
+export enum JudgeOpt {
+    Normal = 0,
+    Easy = 1,
 }

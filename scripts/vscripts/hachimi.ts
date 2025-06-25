@@ -2,7 +2,7 @@
 import { Instance } from "cspointscript"
 import { runServerCommand, game, addOutputByName, createEntity, uniqueId, Vector } from "s2ts/counter-strike"
 import { Chart, charts } from './musics';
-import { C, Opt } from "./constants";
+import { C, JudgeOpt, Opt } from "./constants";
 import { SoundEffect, createSoundEvent } from "./sound";
 import { JudgeTipController } from "./judge_tip_controller";
 import { HitmarkerController } from "./hitmarker_controller";
@@ -29,6 +29,7 @@ export class HachimiGame {
     }
 
     option: Opt = Opt.Off;
+    judgeOption: JudgeOpt = JudgeOpt.Normal;
 
     _lastMusicIndex = -1;
     _lastOption: Opt = Opt.Off;
@@ -287,7 +288,7 @@ export class HachimiGame {
             }
 
             Instance.EntFireAtName('target_maodie_hachimi_' + suffix, 'SetBodyGroup', 'body,1');
-        }, judgeDelay - C.GOOD_RANGE);
+        }, judgeDelay - C.JUDGE_RANGE_SETS[this.judgeOption].GOOD);
 
         game.runAfterDelaySeconds(() => {
             if (this.hardStopped) {
@@ -299,7 +300,7 @@ export class HachimiGame {
             }
 
             this.onTargetKilled(suffix, 2);
-        }, judgeDelay + C.POOR_RANGE);
+        }, judgeDelay + C.JUDGE_RANGE_SETS[this.judgeOption].POOR);
     }
 
     onTick() {
@@ -380,7 +381,10 @@ export class HachimiGame {
         const tickTime = barTime / 4;
         let blankTime = -(this.chart.BarLineList[0] - (barTime * 2));
 
-        while (blankTime < barTime * 2 || blankTime < this.trackTime + C.WAIT_TIME) {
+        while (blankTime < 0 ||
+            blankTime < barTime * 2 || 
+            blankTime < this.trackTime + C.WAIT_TIME
+        ) {
             blankTime += barTime;
         }
 
@@ -485,13 +489,13 @@ export class HachimiGame {
 
         const offset = note.Time - this.time;
 
-        if (offset > C.POOR_RANGE) {
+        if (offset > C.JUDGE_RANGE_SETS[this.judgeOption].POOR) {
             return;
         }
 
         const judgeDelta = Math.abs(offset);
 
-        if (judgeDelta > C.GREAT_RANGE && lastNoteTime && lastNoteTime != -1) {
+        if (judgeDelta > C.JUDGE_RANGE_SETS[JudgeOpt.Normal].PGREAT && lastNoteTime && lastNoteTime != -1) {
             const minJudgeTime = lastNoteTime + (note.Time - lastNoteTime) / 2;
 
             if (this.time < minJudgeTime) {
@@ -502,16 +506,16 @@ export class HachimiGame {
         this.lastNoteTimes[note.LaneId] = note.Time;
 
         const judgement = (() => {
-            if (judgeDelta < C.PGREAT_RANGE) {
+            if (judgeDelta < C.JUDGE_RANGE_SETS[this.judgeOption].PGREAT) {
                 this.gameplayStatus.perfect++;
                 return 0;
-            } else if (judgeDelta < C.GREAT_RANGE) {
+            } else if (judgeDelta < C.JUDGE_RANGE_SETS[this.judgeOption].GREAT) {
                 this.gameplayStatus.great++;
                 return 1;
-            } else if (judgeDelta < C.GOOD_RANGE) {
+            } else if (judgeDelta < C.JUDGE_RANGE_SETS[this.judgeOption].GOOD) {
                 this.gameplayStatus.good++;
                 return 2;
-            } else if (judgeDelta < C.BAD_RANGE) {
+            } else if (judgeDelta < C.JUDGE_RANGE_SETS[this.judgeOption].BAD) {
                 this.gameplayStatus.bad++;
                 return 3;
             }
@@ -631,27 +635,29 @@ export class HachimiGame {
         }
 
         const optionText = C.OPTION_TO_TEXT[this.option];
-        if (optionText) {
-            status.push('USE OPTION: ' + optionText);
+        const judgeOptText = C.JUDGE_OPTION_TO_TEXT[this.judgeOption];
+        
+        if (optionText || judgeOptText) {
+            status.push('USE OPTION: ' + [optionText, judgeOptText].filter(v => v).join(', '));
         }
 
         Instance.EntFireAtName("game_indicator", "SetMessage", status.join('\n'));
 
         const progress = (this.lastNoteIndex - this.suffixToNoteIndexMap.size) / this.music.chart.NoteDataList.length;
-        const progressText = new Array(Math.floor(progress * 64))
-            .fill('█')
+        const progressText = new Array(Math.floor(progress * 45))
+            .fill('▉')
             .join('');
 
         const progressLast = (p => {
             if (p >= 0.875) return '▉';
             if (p >= 0.75) return '▊';
             if (p >= 0.625) return '▋';
-            if (p >= 0.5) return '▌';
+            // if (p >= 0.5) return '▌';
             if (p >= 0.375) return '▍';
             if (p >= 0.25) return '▎';
             if (p >= 0.125) return '▏';
             return '';
-        })(progress * 64 - progressText.length);
+        })(progress * 44 - progressText.length);
 
         Instance.EntFireAtName("game_progress", "SetMessage", progressText + progressLast);
     }

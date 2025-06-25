@@ -120,6 +120,22 @@
 		vsnd_files = "sounds/songs/135s_of_manbo.vsnd"
 	}
 
+	"music.space_manbo" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 1.0
+		vsnd_files = "sounds/songs/space_manbo.vsnd"
+	}
+
+	"music.manbo_no_more" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 1.0
+		vsnd_files = "sounds/songs/manbo_no_more_cut.vsnd"
+	}
+
 	"effect.maodie_ha" =
 	{
 		type = "csgo_music"

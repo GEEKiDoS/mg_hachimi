@@ -3,7 +3,7 @@ import { Instance } from "cspointscript"
 import { runServerCommand, game } from "s2ts/counter-strike"
 import { charts, Music } from './musics';
 import { HachimiGame } from "./hachimi";
-import { C, Opt } from "./constants";
+import { C, JudgeOpt, Opt } from "./constants";
 
 Instance.PublicMethod("HachimiInit", (suffix: string) => {
     const inst = HachimiGame.instance;
@@ -183,6 +183,21 @@ Instance.PublicMethod("ToggleOption", () => {
     Instance.EntFireAtName("option_display", "SetMessage", C.OPTION_TO_TEXT[inst.option] ?? 'OFF');
 });
 
+Instance.PublicMethod("ToggleJudgeOption", () => {
+    const inst = HachimiGame.instance;
+    if (!inst || !inst.postInited || !inst.musicStopped) {
+        return;
+    }
+
+    if (inst.judgeOption + 1 > JudgeOpt.Easy) {
+        inst.judgeOption = JudgeOpt.Normal;
+    } else {
+        inst.judgeOption = inst.option + 1;
+    }
+
+    Instance.EntFireAtName("judge_opt_display", "SetMessage", C.JUDGE_OPTION_TO_TEXT[inst.judgeOption] ?? 'NORMAL');
+});
+
 game.onTick(() => {
     const inst = HachimiGame.instance;
     if (!inst || !inst.postInited) {
@@ -205,6 +220,7 @@ game.onTick(() => {
 
     const greenNumber = Math.floor((inst.trackTime * 1000 * 3) / 5);
     Instance.EntFireAtName("maodie_green_num_text", "SetMessage", greenNumber.toString());
+    Instance.EntFireAtName("maodie_speed_text", "SetMessage", (inst.speed / 10).toFixed(2));
 });
 
 let lastCfgSuffix = 0;
