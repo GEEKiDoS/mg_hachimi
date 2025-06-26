@@ -136,6 +136,14 @@
 		vsnd_files = "sounds/songs/manbo_no_more_cut.vsnd"
 	}
 
+	"music.huoquanjia" =
+	{
+		type = "csgo_music"
+		use_hrtf = 0.0
+		volume = 0.8
+		vsnd_files = "sounds/songs/huoquanjia.vsnd"
+	}
+
 	"effect.maodie_ha" =
 	{
 		type = "csgo_music"

@@ -14,7 +14,7 @@ function prependSpace(value: { toString: () => string }, count: number = 12) {
 export class HachimiGame {
     static instance: HachimiGame | undefined = undefined;
     static init() {
-        this.instance = new HachimiGame();
+        return this.instance = new HachimiGame();
     }
 
     trackTime = 1.25;
@@ -116,7 +116,10 @@ export class HachimiGame {
     lastNoteIndex = 0;
     musicStarted = false;
     musicStopped = true;
+    canStart = false;
     hardStopped = false;
+
+    noteProgress = 0;
 
     gameplayStatus = {
         perfect: 0,
@@ -214,6 +217,8 @@ export class HachimiGame {
 
         runServerCommand("exec music_list.cfg");
         this.updateText();
+
+        this.canStart = true;
     }
 
     get time() {
@@ -357,37 +362,11 @@ export class HachimiGame {
         }
 
         this.musicStopped = true;
+        this.canStart = true;
     }
 
-    start() {
-        if (!this.postInited) {
-            runServerCommand("say Not ready yet.");
-            return;
-        }
-
-        if (!this.musicStopped) {
-            return;
-        }
-
-        this.suffixToNoteIndexMap.clear();
-        this.applyChartOptions();
-
-        runServerCommand("ent_fire logic_relay FireUser2");
-        Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
-        Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
-        Instance.EntFireAtName('maodie_start_text', 'SetMessage', "GET READY");
-
-        const barTime = this.chart.BarLineList[1] - this.chart.BarLineList[0];
-        const tickTime = barTime / 4;
-        let blankTime = -(this.chart.BarLineList[0] - (barTime * 2));
-
-        while (blankTime < 0 ||
-            blankTime < barTime * 2 || 
-            blankTime < this.trackTime + C.WAIT_TIME
-        ) {
-            blankTime += barTime;
-        }
-
+    clearStatus() {
+        this.noteProgress = 0;
         this.gameplayStatus = {
             perfect: 0,
             great: 0,
@@ -402,6 +381,46 @@ export class HachimiGame {
             late: 0,
             early: 0,
         };
+
+        this.updateText();
+    }
+
+    start() {
+        if (!this.postInited) {
+            runServerCommand("say Not ready yet.");
+            return;
+        }
+
+        if (!this.musicStopped) {
+            return;
+        }
+
+        if (!this.canStart) {
+            return;
+        }
+
+        this.canStart = false;
+
+        this.suffixToNoteIndexMap.clear();
+        this.applyChartOptions();
+
+        runServerCommand("ent_fire logic_relay FireUser2");
+        Instance.EntFireBroadcast('maodie_sound_player', 'StopSound');
+        Instance.EntFireBroadcast('maodie_sound_player', 'Kill');
+        Instance.EntFireAtName('maodie_start_text', 'SetMessage', "GET READY");
+
+        const barTime = this.chart.BarLineList[1] - this.chart.BarLineList[0];
+        const tickTime = barTime / 4;
+        let blankTime = -(this.chart.BarLineList[0] - (barTime * 2));
+
+        while (blankTime < 0 ||
+            blankTime < barTime * 2 ||
+            blankTime < this.trackTime + C.WAIT_TIME
+        ) {
+            blankTime += barTime;
+        }
+
+        this.clearStatus();
 
         this.chart.NoteDataList = this.chart.NoteDataList.sort((a, b) => a.Time - b.Time);
 
@@ -581,6 +600,7 @@ export class HachimiGame {
         Instance.EntFireAtName('maodie_moving_' + suffix, 'Stop');
 
         this.suffixToNoteIndexMap.delete(suffix);
+        this.noteProgress++;
     }
 
     updateText() {
@@ -636,14 +656,14 @@ export class HachimiGame {
 
         const optionText = C.OPTION_TO_TEXT[this.option];
         const judgeOptText = C.JUDGE_OPTION_TO_TEXT[this.judgeOption];
-        
+
         if (optionText || judgeOptText) {
             status.push('USE OPTION: ' + [optionText, judgeOptText].filter(v => v).join(', '));
         }
 
         Instance.EntFireAtName("game_indicator", "SetMessage", status.join('\n'));
 
-        const progress = (this.lastNoteIndex - this.suffixToNoteIndexMap.size) / this.music.chart.NoteDataList.length;
+        const progress = (this.noteProgress + 1) / this.music.chart.NoteDataList.length;
         const progressText = new Array(Math.floor(progress * 45))
             .fill('▉')
             .join('');
@@ -657,7 +677,7 @@ export class HachimiGame {
             if (p >= 0.25) return '▎';
             if (p >= 0.125) return '▏';
             return '';
-        })(progress * 44 - progressText.length);
+        })(progress * 45 - progressText.length);
 
         Instance.EntFireAtName("game_progress", "SetMessage", progressText + progressLast);
     }

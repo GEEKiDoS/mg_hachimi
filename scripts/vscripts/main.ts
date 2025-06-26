@@ -57,6 +57,7 @@ Instance.PublicMethod("HachimiMusicPrev", () => {
     }
 
     inst.updateMusic();
+    inst.clearStatus();
 });
 
 Instance.PublicMethod("HachimiMusicNext", () => {
@@ -72,6 +73,7 @@ Instance.PublicMethod("HachimiMusicNext", () => {
     }
 
     inst.updateMusic();
+    inst.clearStatus();
 });
 
 let trackTimeMod = 0;
@@ -198,6 +200,12 @@ Instance.PublicMethod("ToggleJudgeOption", () => {
     Instance.EntFireAtName("judge_opt_display", "SetMessage", C.JUDGE_OPTION_TO_TEXT[inst.judgeOption] ?? 'NORMAL');
 });
 
+function updateSpeedUI(inst: HachimiGame) {
+    const greenNumber = Math.floor((inst.trackTime * 1000 * 3) / 5);
+    Instance.EntFireAtName("maodie_green_num_text", "SetMessage", greenNumber.toString());
+    Instance.EntFireAtName("maodie_speed_text", "SetMessage", (inst.speed / 10).toFixed(2));
+};
+
 game.onTick(() => {
     const inst = HachimiGame.instance;
     if (!inst || !inst.postInited) {
@@ -218,9 +226,7 @@ game.onTick(() => {
         inst.trackTime = 5;
     }
 
-    const greenNumber = Math.floor((inst.trackTime * 1000 * 3) / 5);
-    Instance.EntFireAtName("maodie_green_num_text", "SetMessage", greenNumber.toString());
-    Instance.EntFireAtName("maodie_speed_text", "SetMessage", (inst.speed / 10).toFixed(2));
+    updateSpeedUI(inst);
 });
 
 let lastCfgSuffix = 0;
@@ -248,8 +254,10 @@ game.runNextTick(() => {
 });
 
 game.on('round_start', () => {
-    HachimiGame.init();
+    const inst = HachimiGame.init();
     Instance.EntFireAtName("stop_button", "Alpha", 0);
+
+    updateSpeedUI(inst);
 });
 
 // simple timescale cheat detection
