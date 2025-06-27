@@ -485,7 +485,7 @@ export class HachimiGame {
     }
 
     processKilledTargets() {
-        this.killedObjects
+        const [v] = this.killedObjects
             .filter(v => this.suffixToNoteIndexMap.has(v.suffix))
             .sort((a, b) => {
                 const indexA = this.suffixToNoteIndexMap.get(a.suffix)!;
@@ -493,11 +493,12 @@ export class HachimiGame {
 
                 return this.chart.NoteDataList[indexA].Time -
                     this.chart.NoteDataList[indexB].Time;
-            })
-            .forEach(v => {
-                const index = this.suffixToNoteIndexMap.get(v.suffix)!;
-                this.processKilledTarget(v.suffix, index, v.where);
             });
+
+        if (v) {
+            const index = this.suffixToNoteIndexMap.get(v.suffix)!;
+            this.processKilledTarget(v.suffix, index, v.where);
+        }
 
         this.killedObjects = [];
     }
